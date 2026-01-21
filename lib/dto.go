@@ -2,12 +2,18 @@ package lib
 
 
 type User struct {
-	Username string `json:"username" form:"username"`
+	Id int 
+	Email string `json:"email" form:"email"`
 	Password string `json:"password" form:"password"`
+}
+
+type UserRole struct {
+	User User
+	RoleId int `json:"role_id" form:"role_id"`
 }
 
 type Response struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
-	Result  any    `json:"result"`
+	Result  any    `json:"result,omitempty"`
 }
