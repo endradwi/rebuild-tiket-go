@@ -35,15 +35,23 @@ func Register(user lib.UserRole) error {
 		}
 	}
 
-	// Cari email jika sudah di daftarkan karena email UNIQUE
-	var existingEmail string
-	err = pgConn.QueryRow(context.Background(), `SELECT email FROM "user" WHERE email = $1`, user.User.Email).Scan(&existingEmail)
+	_, err = FindEmail(user.User)
+	
+	// If FindEmail returns no error, it means the email WAS found, which is an error for registration.
 	if err == nil {
-		return  fmt.Errorf("email already exists")
+		return fmt.Errorf("email already exists")
 	}
+
+	// If FindEmail returns an error, we need to check if it's the "no rows" error.
+	// FindEmail wraps the error: fmt.Errorf("checking email existence: %w", err)
+	// errors.Is handles wrapped errors automatically.
 	if !errors.Is(err, pgx.ErrNoRows) {
-		return  fmt.Errorf("checking email existence: %w", err)
+		// If it's some OTHER error (db connection, etc.), return that error.
+		return fmt.Errorf("checking email existence: %w", err)
 	}
+
+	// If we are here, err is pgx.ErrNoRows, which means the email is NOT in the database.
+	// This is exactly what we want for a new registration.
 
 	// Insert ke dalam table
 	var userId int
@@ -63,12 +71,30 @@ func Register(user lib.UserRole) error {
 	return  nil
 }
 
-// func Login(user lib.User) lib.User {
-// 	pgConn := lib.InitDB()
+func FindEmail(user lib.User) (lib.User, error) {
+	pgConn := lib.InitDB()
 
-// 	defer pgConn.Close(context.Background())
+	defer pgConn.Close(context.Background())
 
-// 	//Create hash password
-	
-	
-// }
+	// cek email ada atau tidak
+	var dbUser lib.User
+	err := pgConn.QueryRow(context.Background(), `SELECT id, email, password FROM "user" WHERE email = $1`, user.Email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password)
+	if err != nil {
+		return user, fmt.Errorf("checking email existence: %w", err)
+	}
+
+	return dbUser, nil
+}
+
+func CreateResetPassword(resetPassword lib.ResetPassword) error {
+	pgConn := lib.InitDB()
+
+	defer pgConn.Close(context.Background())
+
+	_, err := pgConn.Exec(context.Background(), `INSERT INTO reset_password (profile_id, token_hash, expired_at) VALUES ($1, $2, $3)`, resetPassword.ProfileId, resetPassword.TokenHash, resetPassword.ExpiredAt)
+	if err != nil {
+		return fmt.Errorf("inserting reset password: %w", err)
+	}
+
+	return nil
+}

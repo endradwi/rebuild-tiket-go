@@ -1,5 +1,7 @@
 package lib
 
+import "time"
+
 
 type User struct {
 	Id int 
@@ -16,4 +18,13 @@ type Response struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Result  any    `json:"result,omitempty"`
+}
+
+type ResetPassword struct {
+	Id int
+	ProfileId int
+	TokenHash string
+	ExpiredAt time.Time
+	UsedAt time.Time
+	CreatedAt time.Time
 }
