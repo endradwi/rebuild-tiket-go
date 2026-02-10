@@ -25,6 +25,11 @@ type ResetPassword struct {
 	ProfileId int
 	TokenHash string
 	ExpiredAt time.Time
-	UsedAt time.Time
+	UsedAt *time.Time
 	CreatedAt time.Time
+}
+
+type ResetPasswordRequest struct {
+	Token string `json:"token" form:"token"`
+	Password string `json:"password" form:"password"`
 }

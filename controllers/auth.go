@@ -133,10 +133,9 @@ func ForgotPassword(c *gin.Context) {
 		ExpiredAt: time.Now().Add(time.Hour * 24),
 	}
 
-	resetLink := fmt.Sprintf("http://localhost:8080/auth/reset-password?token=%s", resetPassword.TokenHash)
+	resetLink := fmt.Sprintf("http://localhost:8080/auth/reset-password?token=%s", hashTokenEncode)
 
 	err = lib.SendResetPassword(dbUser.Email, resetLink)
-	fmt.Println(err)
 	if err != nil {
 		c.JSON(500, lib.Response{
 			Status:  500,
@@ -144,6 +143,74 @@ func ForgotPassword(c *gin.Context) {
 		})
 		return
 	}
+
+	err = models.CreateResetPassword(resetPassword)
+	if err != nil {
+		c.JSON(500, lib.Response{
+			Status:  500,
+			Message: "internal server error",
+		})
+		return
+	}
+
+	c.JSON(200, lib.Response{
+		Status:  200,
+		Message: "success",
+	})
+	
+}
+
+func ValidatePasswordReset(c *gin.Context) {
+	var resetReq lib.ResetPasswordRequest
+	
+	if err := c.ShouldBind(&resetReq); err != nil {
+		c.JSON(400, lib.Response{
+			Status:  400,
+			Message: "bad request",
+		})
+		return
+	}
+
+	if resetReq.Token == "" {
+		resetReq.Token = c.Query("token")
+	}
+
+	resetPassword, err := models.FindResetPassword(resetReq.Token)
+	if err != nil {
+		c.JSON(404, lib.Response{
+			Status:  404,
+			Message: "reset password not found",
+		})
+		return
+	}
+
+	hashPassword, err := lib.HashPassword(resetReq.Password)
+
+	if err != nil {
+		c.JSON(500, lib.Response{
+			Status:  500,
+			Message: "internal server error",
+		})
+		return
+	}
+	
+	err = models.UpdatePassword(resetPassword.ProfileId, hashPassword)
+	if err != nil {
+		c.JSON(500, lib.Response{
+			Status:  500,
+			Message: "internal server error",
+		})
+		return
+	}
+
+	// err = models.DeleteResetPassword(resetPassword.TokenHash)
+	// if err != nil {
+	// 	c.JSON(500, lib.Response{
+	// 		Status:  500,
+	// 		Message: "internal server error",
+	// 	})
+	// 	return
+	// }
 
 	c.JSON(200, lib.Response{
 		Status:  200,

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"tiket/lib"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -91,9 +92,63 @@ func CreateResetPassword(resetPassword lib.ResetPassword) error {
 
 	defer pgConn.Close(context.Background())
 
-	_, err := pgConn.Exec(context.Background(), `INSERT INTO reset_password (profile_id, token_hash, expired_at) VALUES ($1, $2, $3)`, resetPassword.ProfileId, resetPassword.TokenHash, resetPassword.ExpiredAt)
+	var profileId int
+	err := pgConn.QueryRow(context.Background(), `SELECT id FROM profile WHERE user_id = $1`, resetPassword.ProfileId).Scan(&profileId)
+	if err != nil {
+		return fmt.Errorf("checking profile existence: %w", err)
+	}
+
+	data, err := pgConn.Exec(context.Background(), `INSERT INTO reset_password (profile_id, token_hash, expired_at) VALUES ($1, $2, $3)`, profileId, resetPassword.TokenHash, resetPassword.ExpiredAt)
 	if err != nil {
 		return fmt.Errorf("inserting reset password: %w", err)
+	}
+
+	fmt.Println(data)
+
+	return nil
+}
+
+func FindResetPassword(tokenHash string) (lib.ResetPassword, error) {
+	pgConn := lib.InitDB()
+
+	defer pgConn.Close(context.Background())
+
+	var resetPassword lib.ResetPassword
+	err := pgConn.QueryRow(context.Background(), `SELECT id, profile_id, token_hash, expired_at, used_at, created_at FROM reset_password WHERE token_hash = $1`, tokenHash).Scan(&resetPassword.Id, &resetPassword.ProfileId, &resetPassword.TokenHash, &resetPassword.ExpiredAt, &resetPassword.UsedAt, &resetPassword.CreatedAt)
+
+	if err != nil {
+		return resetPassword, fmt.Errorf("checking reset password: %w", err)
+	}
+
+	return resetPassword, nil
+}
+
+func UpdatePassword(profileId int, password string) error {
+	pgConn := lib.InitDB()
+
+	defer pgConn.Close(context.Background())
+
+	_, err := pgConn.Exec(context.Background(), `UPDATE "user" SET password = $1 WHERE id = (SELECT user_id FROM profile WHERE id = $2)`, password, profileId)
+	if err != nil {
+		return fmt.Errorf("updating password: %w", err)
+	}
+
+	_, err = pgConn.Exec(context.Background(), `UPDATE reset_password SET used_at = $1 WHERE profile_id = $2`, time.Now(), profileId)
+	if err != nil {
+		return fmt.Errorf("updating reset password: %w", err)
+	}
+
+	return nil
+}
+
+func DeleteResetPassword(tokenHash string) error {
+	pgConn := lib.InitDB()
+
+	defer pgConn.Close(context.Background())
+
+	_, err := pgConn.Exec(context.Background(), `DELETE FROM reset_password WHERE token_hash = $1`, tokenHash)
+	if err != nil {
+		return fmt.Errorf("deleting reset password: %w", err)
 	}
 
 	return nil
