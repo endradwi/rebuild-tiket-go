@@ -30,7 +30,7 @@ func Register(user lib.UserRole) error {
 	} else {
 		
 		// Cari dari DB
-		err = pgConn.QueryRow(context.Background(), `SELECT id FROM "role" WHERE name = $1`, "USER").Scan(&roleId)
+		err = pgConn.QueryRow(context.Background(), `SELECT id FROM role WHERE name = $1`, "USER").Scan(&roleId)
 		if err != nil {
 			return  fmt.Errorf("getting role id: %w", err)
 		}

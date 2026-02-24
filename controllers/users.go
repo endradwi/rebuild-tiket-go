@@ -1,14 +1,10 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"tiket/lib"
 	"tiket/models"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,38 +44,7 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	var picturePath *string
-
-	// Handle file upload manually for "picture"
-	file, err := c.FormFile("picture")
-	if err == nil {
-		// File was uploaded
-		// Ensure uploads directory exists
-		uploadDir := "uploads/profiles"
-		if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
-			c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to create upload directory"})
-			return
-		}
-
-		// Generate unique filename
-		filename := fmt.Sprintf("%d_%d_%s", userId, time.Now().Unix(), filepath.Base(file.Filename))
-		savePath := filepath.Join(uploadDir, filename)
-
-		if err := c.SaveUploadedFile(file, savePath); err != nil {
-			c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to save picture"})
-			return
-		}
-
-		// Store relative path
-		picPathStr := "/" + savePath
-		picturePath = &picPathStr
-	} else if err != http.ErrMissingFile {
-		// Some other error during file upload
-		c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "Error uploading picture"})
-		return
-	}
-
-	updatedProfile, err := models.UpdateUserProfile(userId, req, picturePath)
+	updatedProfile, err := models.UpdateUserProfile(userId, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to update profile: " + err.Error()})
 		return

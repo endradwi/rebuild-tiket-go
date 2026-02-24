@@ -40,7 +40,6 @@ type UserProfile struct {
 	FirstName *string `json:"first_name"`
 	LastName *string `json:"last_name"`
 	PhoneNumber *int `json:"phone_number"`
-	Picture *string `json:"picture"`
 	Point *int `json:"point"`
 }
 

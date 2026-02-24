@@ -12,12 +12,12 @@ func UserRouter(router *gin.RouterGroup) {
 
 	// Allow GET all users
 	userRoutes.GET("", controllers.GetAllUsers)
-	userRoutes.GET("/:id", controllers.GetUserById)
-
+	
 	// Protected routes (require valid JWT token)
 	protectedRoutes := userRoutes.Group("")
 	protectedRoutes.Use(middleware.AuthMiddleware())
-
+	
+	protectedRoutes.GET("/:id", controllers.GetUserById)
 	// Profile endpoints
 	protectedRoutes.GET("/profile", controllers.GetProfile)
 	// PATCH method combined with profile image upload capability

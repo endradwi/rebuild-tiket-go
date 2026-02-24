@@ -1,7 +1,7 @@
 -- =========================
 -- TABLE: role
 -- =========================
-CREATE TABLE "role" (
+CREATE TABLE role (
   id SERIAL PRIMARY KEY,
   name VARCHAR NOT NULL UNIQUE
 );
@@ -24,7 +24,6 @@ CREATE TABLE profile (
   first_name VARCHAR,
   last_name VARCHAR,
   phone_number INT,
-  picture VARCHAR,
   point INT,
   tiket_status BOOLEAN,
   user_id INT,
@@ -125,7 +124,7 @@ CREATE TABLE seat (
 -- =========================
 -- TABLE: order
 -- =========================
-CREATE TABLE "order" (
+CREATE TABLE orders (
   id BIGSERIAL PRIMARY KEY,
   profile_id INT,
   movie_id INT,
@@ -160,8 +159,8 @@ CREATE TABLE payment (
 
   CONSTRAINT fk_payment_order
     FOREIGN KEY (order_id)
-    REFERENCES "order"(id)
+    REFERENCES orders(id)
 );
 
 
-INSERT INTO "role" (name) VALUES ('USER'), ('ADMIN');
+INSERT INTO role (name) VALUES ('USER'), ('ADMIN');
