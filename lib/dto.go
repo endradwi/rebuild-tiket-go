@@ -33,3 +33,19 @@ type ResetPasswordRequest struct {
 	Token string `json:"token" form:"token"`
 	Password string `json:"password" form:"password"`
 }
+
+type UserProfile struct {
+	Id int `json:"id"`
+	Email string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName *string `json:"last_name"`
+	PhoneNumber *int `json:"phone_number"`
+	Picture *string `json:"picture"`
+	Point *int `json:"point"`
+}
+
+type ProfileUpdateRequest struct {
+	FirstName *string `form:"first_name"`
+	LastName *string `form:"last_name"`
+	PhoneNumber *int `form:"phone_number"`
+}
