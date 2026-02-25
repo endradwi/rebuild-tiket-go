@@ -9,9 +9,10 @@ import (
 )
 
 func GenerateTokenJwt(payload map[string]interface{}) (string, error) {
-	token:= jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(payload))
+	godotenv.Load()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(payload))
 
-	tokenString, err := token.SignedString([]byte("secret"))
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	if err != nil {
 		return "", err
