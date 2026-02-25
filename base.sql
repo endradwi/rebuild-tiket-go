@@ -9,7 +9,7 @@ CREATE TABLE role (
 -- =========================
 -- TABLE: user
 -- =========================
-CREATE TABLE "user" (
+CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   email VARCHAR NOT NULL UNIQUE,
   password VARCHAR NOT NULL
@@ -24,7 +24,7 @@ CREATE TABLE profile (
   first_name VARCHAR,
   last_name VARCHAR,
   phone_number INT,
-  image VARCHAR,
+image VARCHAR,
   point INT,
   tiket_status BOOLEAN,
   user_id INT,
@@ -32,12 +32,12 @@ CREATE TABLE profile (
 
   CONSTRAINT fk_profile_user
     FOREIGN KEY (user_id)
-    REFERENCES "user"(id)
+    REFERENCES users(id)
     ON DELETE CASCADE,
 
   CONSTRAINT fk_profile_role
     FOREIGN KEY (role_id)
-    REFERENCES "role"(id)
+    REFERENCES role(id)
 );
 
 -- =========================

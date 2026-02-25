@@ -57,7 +57,7 @@ func Register(user lib.UserRole) error {
 	// Insert ke dalam table
 	var userId int
 
-	err = pgConn.QueryRow(context.Background(), `INSERT INTO "user" (email, password) VALUES ($1, $2) RETURNING id`, user.User.Email, hash).Scan(&userId)
+	err = pgConn.QueryRow(context.Background(), `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`, user.User.Email, hash).Scan(&userId)
 
 	if err != nil {
 		return  fmt.Errorf("inserting user: %w", err)
@@ -79,7 +79,7 @@ func FindEmail(user lib.User) (lib.User, error) {
 
 	// cek email ada atau tidak
 	var dbUser lib.User
-	err := pgConn.QueryRow(context.Background(), `SELECT id, email, password FROM "user" WHERE email = $1`, user.Email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password)
+	err := pgConn.QueryRow(context.Background(), `SELECT id, email, password FROM users WHERE email = $1`, user.Email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password)
 	if err != nil {
 		return user, fmt.Errorf("checking email existence: %w", err)
 	}
@@ -128,7 +128,7 @@ func UpdatePassword(profileId int, password string) error {
 
 	defer pgConn.Close(context.Background())
 
-	_, err := pgConn.Exec(context.Background(), `UPDATE "user" SET password = $1 WHERE id = (SELECT user_id FROM profile WHERE id = $2)`, password, profileId)
+	_, err := pgConn.Exec(context.Background(), `UPDATE users SET password = $1 WHERE id = (SELECT user_id FROM profile WHERE id = $2)`, password, profileId)
 	if err != nil {
 		return fmt.Errorf("updating password: %w", err)
 	}

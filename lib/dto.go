@@ -17,7 +17,16 @@ type UserRole struct {
 type Response struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
-	Result  any    `json:"result,omitempty"`
+	Result   any       `json:"result,omitempty"`
+	PageInfo *PageInfo `json:"page_info,omitempty"`
+}
+
+type PageInfo struct {
+	CurentPage int `json:"current_page"`
+	NextPage   int `json:"next_page"`
+	PrevPage   int `json:"prev_page"`
+	TotalPage  int `json:"total_page"`
+	TotalData  int `json:"total_data"`
 }
 
 type ResetPassword struct {
@@ -50,3 +59,48 @@ type ProfileUpdateRequest struct {
 	PhoneNumber *int `form:"phone_number"`
 	Image *string `form:"-"`
 }
+
+type Movie struct {
+	Id             int        `json:"id"`
+	Image          *string    `json:"image"`
+	Title          string     `json:"title"`
+	ReleasedAt     *time.Time `json:"released_at"`
+	Recommendation *bool      `json:"recommendation"`
+	Duration       *string    `json:"duration"`
+	Synopsis       *string    `json:"synopsis"`
+	GenreId        *int       `json:"genre_id"`
+	CasterId       *int       `json:"caster_id"`
+	CinemaId       *int       `json:"cinema_id"`
+}
+
+type MovieCreateRequest struct {
+	Title          string     `form:"title" binding:"required"`
+	ReleasedAt     *time.Time `form:"released_at"`
+	Recommendation *bool      `form:"recommendation"`
+	Duration       *string    `form:"duration"`
+	Synopsis       *string    `form:"synopsis"`
+	GenreId        *int       `form:"genre_id"`
+	CasterId       *int       `form:"caster_id"`
+	CinemaId       *int       `form:"cinema_id"`
+	Image          *string    `form:"-"`
+}
+
+type MovieUpdateRequest struct {
+	Title          *string    `form:"title"`
+	ReleasedAt     *time.Time `form:"released_at"`
+	Recommendation *bool      `form:"recommendation"`
+	Duration       *string    `form:"duration"`
+	Synopsis       *string    `form:"synopsis"`
+	GenreId        *int       `form:"genre_id"`
+	CasterId       *int       `form:"caster_id"`
+	CinemaId       *int       `form:"cinema_id"`
+	Image          *string    `form:"-"`
+}
+
+type MovieQueryParams struct {
+	Limit  int    `form:"limit"`
+	Page   int    `form:"page"`
+	Search string `form:"search"`
+}
+
+

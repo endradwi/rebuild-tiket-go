@@ -16,7 +16,7 @@ func GetUserProfile(userId int) (lib.UserProfile, error) {
 	var profile lib.UserProfile
 	err := pgConn.QueryRow(context.Background(), `
 		SELECT u.id, u.email, p.first_name, p.last_name, p.phone_number, p.image, p.point
-		FROM "user" u
+		FROM users u
 		LEFT JOIN profile p ON u.id = p.user_id
 		WHERE u.id = $1
 	`, userId).Scan(
@@ -65,7 +65,7 @@ func GetAllUsers() ([]lib.UserProfile, error) {
 
 	rows, err := pgConn.Query(context.Background(), `
 		SELECT u.id, u.email, p.first_name, p.last_name, p.phone_number, p.image, p.point
-		FROM "user" u
+		FROM users u
 		LEFT JOIN profile p ON u.id = p.user_id
 		ORDER BY u.id ASC
 	`)
@@ -99,7 +99,7 @@ func DeleteUser(userId int) error {
 	pgConn := lib.InitDB()
 	defer pgConn.Close(context.Background())
 	// Because of ON DELETE CASCADE, deleting user deletes profile too
-	_, err := pgConn.Exec(context.Background(), `DELETE FROM "user" WHERE id = $1`, userId)
+	_, err := pgConn.Exec(context.Background(), `DELETE FROM users WHERE id = $1`, userId)
 	if err != nil {
 		return fmt.Errorf("deleting user: %w", err)
 	}
