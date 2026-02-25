@@ -44,6 +44,54 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
+	// Handle the file upload manually if present
+	file, err := c.FormFile("image")
+	if err == nil {
+		// 1. Validate File Size (e.g., max 5MB)
+		const maxFileSize = 5 << 20 // 5 MB
+		if file.Size > maxFileSize {
+			c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "File size exceeds 5MB limit"})
+			return
+		}
+
+		// 2. Validate File Type (must be an image)
+		// We open the file to read its first 512 bytes for content-type detection
+		openedFile, err := file.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to process image"})
+			return
+		}
+		defer openedFile.Close()
+
+		buffer := make([]byte, 512)
+		_, err = openedFile.Read(buffer)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to read image"})
+			return
+		}
+
+		// Reset the read pointer
+		openedFile.Seek(0, 0)
+
+		contentType := http.DetectContentType(buffer)
+		if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+			c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "Invalid file type. Only JPEG, PNG, and WebP are allowed"})
+			return
+		}
+
+		// create uploads directory if not exists
+		// Create a unique filename
+		filename := "uploads/profile-" + strconv.Itoa(userId) + "-" + file.Filename
+		if err := c.SaveUploadedFile(file, filename); err != nil {
+			c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to save image"})
+			return
+		}
+		
+		// Set the Image URL in request, use a pointer
+		imageUrl := "/" + filename
+		req.Image = &imageUrl
+	}
+
 	updatedProfile, err := models.UpdateUserProfile(userId, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to update profile: " + err.Error()})

@@ -15,13 +15,13 @@ func GetUserProfile(userId int) (lib.UserProfile, error) {
 
 	var profile lib.UserProfile
 	err := pgConn.QueryRow(context.Background(), `
-		SELECT u.id, u.email, p.first_name, p.last_name, p.phone_number, p.point
+		SELECT u.id, u.email, p.first_name, p.last_name, p.phone_number, p.image, p.point
 		FROM "user" u
 		LEFT JOIN profile p ON u.id = p.user_id
 		WHERE u.id = $1
 	`, userId).Scan(
 		&profile.Id, &profile.Email, &profile.FirstName, &profile.LastName, 
-		&profile.PhoneNumber, &profile.Point,
+		&profile.PhoneNumber, &profile.Image, &profile.Point,
 	)
 
 	if err != nil {
@@ -45,9 +45,10 @@ func UpdateUserProfile(userId int, req lib.ProfileUpdateRequest) (lib.UserProfil
 		SET 
 			first_name = COALESCE($1, first_name),
 			last_name = COALESCE($2, last_name),
-			phone_number = COALESCE($3, phone_number)
-		WHERE user_id = $4
-	`, req.FirstName, req.LastName, req.PhoneNumber, userId)
+			phone_number = COALESCE($3, phone_number),
+			image = COALESCE($4, image)
+		WHERE user_id = $5
+	`, req.FirstName, req.LastName, req.PhoneNumber, req.Image, userId)
 
 	if err != nil {
 		return lib.UserProfile{}, fmt.Errorf("updating profile: %w", err)
@@ -63,7 +64,7 @@ func GetAllUsers() ([]lib.UserProfile, error) {
 	defer pgConn.Close(context.Background())
 
 	rows, err := pgConn.Query(context.Background(), `
-		SELECT u.id, u.email, p.first_name, p.last_name, p.phone_number, p.point
+		SELECT u.id, u.email, p.first_name, p.last_name, p.phone_number, p.image, p.point
 		FROM "user" u
 		LEFT JOIN profile p ON u.id = p.user_id
 		ORDER BY u.id ASC
@@ -78,7 +79,7 @@ func GetAllUsers() ([]lib.UserProfile, error) {
 		var profile lib.UserProfile
 		err := rows.Scan(
 			&profile.Id, &profile.Email, &profile.FirstName, &profile.LastName, 
-			&profile.PhoneNumber, &profile.Point,
+			&profile.PhoneNumber, &profile.Image, &profile.Point,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scanning user: %w", err)

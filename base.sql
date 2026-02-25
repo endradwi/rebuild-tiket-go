@@ -24,6 +24,7 @@ CREATE TABLE profile (
   first_name VARCHAR,
   last_name VARCHAR,
   phone_number INT,
+  image VARCHAR,
   point INT,
   tiket_status BOOLEAN,
   user_id INT,
