@@ -101,6 +101,7 @@ type MovieQueryParams struct {
 	Limit  int    `form:"limit"`
 	Page   int    `form:"page"`
 	Search string `form:"search"`
+	Sort   string `form:"sort"` // "asc" or "desc", default "asc"
 }
 
 

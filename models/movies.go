@@ -41,9 +41,12 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 	if params.Limit <= 0 {
 		params.Limit = 10
 	}
+	if params.Sort != "desc" {
+		params.Sort = "asc"
+	}
 
 	// Try reading from Redis first
-	cacheKey := fmt.Sprintf("movies:limit:%d:page:%d:search:%s", params.Limit, params.Page, params.Search)
+	cacheKey := fmt.Sprintf("movies:limit:%d:page:%d:search:%s:sort:%s", params.Limit, params.Page, params.Search, params.Sort)
 	rdb := lib.Redis()
 
 	if rdb != nil {
@@ -97,13 +100,18 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 	}
 
 	// 2. Query movies
-	rows, err := pgConn.Query(context.Background(), `
+	sortDir := "ASC"
+	if params.Sort == "desc" {
+		sortDir = "DESC"
+	}
+	query := fmt.Sprintf(`
 		SELECT id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id, cinema_id
 		FROM movie
 		WHERE title ILIKE $1
-		ORDER BY id DESC
+		ORDER BY id %s
 		LIMIT $2 OFFSET $3
-	`, searchQuery, params.Limit, offset)
+	`, sortDir)
+	rows, err := pgConn.Query(context.Background(), query, searchQuery, params.Limit, offset)
 
 	if err != nil {
 		return nil, pageInfo, fmt.Errorf("querying movies: %w", err)
