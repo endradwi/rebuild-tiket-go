@@ -46,14 +46,16 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 	cacheKey := fmt.Sprintf("movies:limit:%d:page:%d:search:%s", params.Limit, params.Page, params.Search)
 	rdb := lib.Redis()
 
-	cachedVal, err := rdb.Get(context.Background(), cacheKey).Result()
-	if err == nil {
-		var cachedData struct {
-			Movies   []lib.Movie  `json:"movies"`
-			PageInfo lib.PageInfo `json:"page_info"`
-		}
-		if json.Unmarshal([]byte(cachedVal), &cachedData) == nil {
-			return cachedData.Movies, cachedData.PageInfo, nil
+	if rdb != nil {
+		cachedVal, err := rdb.Get(context.Background(), cacheKey).Result()
+		if err == nil {
+			var cachedData struct {
+				Movies   []lib.Movie  `json:"movies"`
+				PageInfo lib.PageInfo `json:"page_info"`
+			}
+			if json.Unmarshal([]byte(cachedVal), &cachedData) == nil {
+				return cachedData.Movies, cachedData.PageInfo, nil
+			}
 		}
 	}
 
@@ -126,16 +128,18 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 	}
 
 	// Save to Redis before returning
-	cacheData := struct {
-		Movies   []lib.Movie  `json:"movies"`
-		PageInfo lib.PageInfo `json:"page_info"`
-	}{
-		Movies:   movies,
-		PageInfo: pageInfo,
-	}
+	if rdb != nil {
+		cacheData := struct {
+			Movies   []lib.Movie  `json:"movies"`
+			PageInfo lib.PageInfo `json:"page_info"`
+		}{
+			Movies:   movies,
+			PageInfo: pageInfo,
+		}
 
-	if cacheBytes, cacheErr := json.Marshal(cacheData); cacheErr == nil {
-		rdb.Set(context.Background(), cacheKey, cacheBytes, 5*time.Minute)
+		if cacheBytes, cacheErr := json.Marshal(cacheData); cacheErr == nil {
+			rdb.Set(context.Background(), cacheKey, cacheBytes, 5*time.Minute)
+		}
 	}
 
 	return movies, pageInfo, nil

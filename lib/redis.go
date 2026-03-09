@@ -23,7 +23,8 @@ func Redis() *redis.Client {
 
 	_, err := redisClient.Ping(ctx).Result()
 	if err != nil {
-		panic(err)
+		fmt.Println("Warning: Could not connect to Redis:", err)
+		return nil
 	}
 
 	return redisClient
