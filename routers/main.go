@@ -11,5 +11,6 @@ func InitRouter(router *gin.Engine)  {
 	AuthRouter(router.Group("/auth"))
 	UserRouter(router.Group(""))
 	MovieRouter(router.Group(""))
+	OrderRouter(router.Group(""))
 	
 }

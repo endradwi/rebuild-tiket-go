@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS payment CASCADE;
+DROP TABLE IF EXISTS order_seats CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS movie_showtimes CASCADE;
 DROP TABLE IF EXISTS movie CASCADE;
@@ -168,9 +169,16 @@ CREATE TABLE seat (
 -- =========================
 CREATE TABLE orders (
   id BIGSERIAL PRIMARY KEY,
+  order_number VARCHAR UNIQUE NOT NULL,
   profile_id INT,
   showtime_id INT,
-  seat_id INT,
+  full_name VARCHAR,
+  email VARCHAR,
+  phone_number VARCHAR,
+  total_price INT,
+  status VARCHAR DEFAULT 'pending', -- pending, paid, cancelled
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
 
   CONSTRAINT fk_order_profile
     FOREIGN KEY (profile_id)
@@ -178,9 +186,23 @@ CREATE TABLE orders (
 
   CONSTRAINT fk_order_showtime
     FOREIGN KEY (showtime_id)
-    REFERENCES movie_showtimes(id),
+    REFERENCES movie_showtimes(id)
+);
 
-  CONSTRAINT fk_order_seat
+-- =========================
+-- TABLE: order_seats
+-- =========================
+CREATE TABLE order_seats (
+  id BIGSERIAL PRIMARY KEY,
+  order_id BIGINT NOT NULL,
+  seat_id INT NOT NULL,
+
+  CONSTRAINT fk_order_seats_order
+    FOREIGN KEY (order_id)
+    REFERENCES orders(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_order_seats_seat
     FOREIGN KEY (seat_id)
     REFERENCES seat(id)
 );
@@ -190,22 +212,34 @@ CREATE TABLE orders (
 -- =========================
 CREATE TABLE payment (
   id SERIAL PRIMARY KEY,
+  order_id BIGINT UNIQUE NOT NULL,
   total_payment INT,
   payment_method VARCHAR,
+  payment_status VARCHAR DEFAULT 'pending', -- pending, success, failed
   expired_at TIMESTAMP,
   qr_code VARCHAR,
-  payment_status VARCHAR,
-  order_id INT,
-  create_at TIMESTAMP,
-  updated_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
 
   CONSTRAINT fk_payment_order
     FOREIGN KEY (order_id)
     REFERENCES orders(id)
+    ON DELETE CASCADE
 );
 
 
 INSERT INTO role (name) VALUES ('USER'), ('ADMIN');
+
+-- -------------------------
+-- default user (Seed)
+-- -------------------------
+INSERT INTO users (id, email, password) 
+VALUES (1, 'test@example.com', '$argon2id$v=19$m=65536,t=3,p=4$vP/WfW9lK9vY7K/k9I1fBw$Z7Q9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a') -- password: password123 (hashed)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO profile (id, user_id, role_id, first_name, last_name)
+VALUES (1, 1, 1, 'Test', 'User')
+ON CONFLICT (id) DO NOTHING;
 
 
 -- =============================================================
@@ -311,3 +345,15 @@ SELECT movie_id, cinema_id, show_date, show_time, price FROM (VALUES
   (3, 2, '2026-07-21'::DATE, '16:00:00'::TIME, 60000)
 ) AS v(movie_id, cinema_id, show_date, show_time, price)
 WHERE NOT EXISTS (SELECT 1 FROM movie_showtimes LIMIT 1);
+
+-- -------------------------
+-- seat (Seed)
+-- -------------------------
+INSERT INTO seat (name, price)
+SELECT name, price FROM (VALUES
+  ('A1', 50000), ('A2', 50000), ('A3', 50000), ('A4', 50000),
+  ('B1', 50000), ('B2', 50000), ('B3', 50000), ('B4', 50000),
+  ('C1', 50000), ('C2', 50000), ('C3', 50000), ('C4', 50000),
+  ('D1', 50000), ('D2', 50000), ('D3', 50000), ('D4', 50000)
+) AS v(name, price)
+WHERE NOT EXISTS (SELECT 1 FROM seat LIMIT 1);

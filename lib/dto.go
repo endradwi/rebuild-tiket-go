@@ -122,4 +122,50 @@ type MovieShowtime struct {
 	Price    int       `json:"price"`
 }
 
+type Seat struct {
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Price int    `json:"price"`
+}
+
+type Order struct {
+	Id          int           `json:"id"`
+	OrderNumber string        `json:"order_number"`
+	ProfileId   *int          `json:"profile_id"`
+	ShowtimeId  int           `json:"showtime_id"`
+	FullName    *string       `json:"full_name"`
+	Email       *string       `json:"email"`
+	PhoneNumber *string       `json:"phone_number"`
+	TotalPrice  int           `json:"total_price"`
+	Status      string        `json:"status"`
+	CreatedAt   time.Time     `json:"created_at"`
+	Seats       []Seat        `json:"seats,omitempty"`
+	MovieTitle  string        `json:"movie_title,omitempty"`
+	CinemaName  string        `json:"cinema_name,omitempty"`
+	ShowDate    *time.Time    `json:"show_date,omitempty"`
+	ShowTime    *string       `json:"show_time,omitempty"`
+}
+
+type OrderCreateRequest struct {
+	ShowtimeId int   `json:"showtime_id" binding:"required"`
+	SeatIds    []int `json:"seat_ids" binding:"required"`
+}
+
+type PaymentRequest struct {
+	FullName      string `json:"full_name" binding:"required"`
+	Email         string `json:"email" binding:"required"`
+	PhoneNumber   string `json:"phone_number" binding:"required"`
+	PaymentMethod string `json:"payment_method" binding:"required"`
+}
+
+type Payment struct {
+	Id             int       `json:"id"`
+	OrderId        int       `json:"order_id"`
+	TotalPayment   int       `json:"total_payment"`
+	PaymentMethod  string    `json:"payment_method"`
+	PaymentStatus  string    `json:"payment_status"`
+	ExpiredAt      time.Time `json:"expired_at"`
+	QrCode         *string   `json:"qr_code"`
+}
+
 
