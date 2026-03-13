@@ -44,7 +44,22 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Note: The userId was set as dbUser.Id (int) during generation, 
 		// but jwt-go decodes numeric claims to float64 by default.
 		c.Set("userId", claims["userId"])
+		c.Set("role", claims["role"])
 
+		c.Next()
+	}
+}
+
+func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role.(string) != requiredRole {
+			c.JSON(403, gin.H{
+				"error": "Forbidden: insufficient permissions",
+			})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

@@ -79,7 +79,13 @@ func FindEmail(user lib.User) (lib.User, error) {
 
 	// cek email ada atau tidak
 	var dbUser lib.User
-	err := pgConn.QueryRow(context.Background(), `SELECT id, email, password FROM users WHERE email = $1`, user.Email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password)
+	err := pgConn.QueryRow(context.Background(), `
+		SELECT u.id, u.email, u.password, r.name as role_name 
+		FROM users u
+		JOIN profile p ON u.id = p.user_id
+		JOIN role r ON p.role_id = r.id
+		WHERE u.email = $1
+	`, user.Email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password, &dbUser.RoleName)
 	if err != nil {
 		return user, fmt.Errorf("checking email existence: %w", err)
 	}

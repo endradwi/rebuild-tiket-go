@@ -7,6 +7,7 @@ type User struct {
 	Id int 
 	Email string `json:"email" form:"email"`
 	Password string `json:"password" form:"password"`
+	RoleName string `json:"role_name,omitempty"`
 }
 
 type UserRole struct {
@@ -68,8 +69,17 @@ type Movie struct {
 	Recommendation *bool      `json:"recommendation"`
 	Duration       *string    `json:"duration"`
 	Synopsis       *string    `json:"synopsis"`
-	GenreId        *int       `json:"genre_id"`
-	CasterId       *int       `json:"caster_id"`
+	DirectorName   *string    `json:"director_name"`
+	GenreId        *int       `json:"genre_id"`   // Legacy: keeping for now but will use Genres
+	CasterId       *int       `json:"caster_id"`  // Legacy
+	Genres         []string   `json:"genres,omitempty"`
+	Casters        []string   `json:"casters,omitempty"`
+}
+
+type ShowtimeReq struct {
+	Date  time.Time `json:"date" form:"date"`
+	Times []string  `json:"times" form:"times"`
+	Price int       `json:"price" form:"price"`
 }
 
 type MovieCreateRequest struct {
@@ -78,8 +88,11 @@ type MovieCreateRequest struct {
 	Recommendation *bool      `form:"recommendation"`
 	Duration       *string    `form:"duration"`
 	Synopsis       *string    `form:"synopsis"`
-	GenreId        *int       `form:"genre_id"`
-	CasterId       *int       `form:"caster_id"`
+	DirectorName   *string    `form:"director_name"`
+	GenreIds       []int      `form:"genre_ids"`
+	CasterIds      []int      `form:"caster_ids"`
+	CinemaIds      []int      `form:"cinema_ids"`
+	Showtimes      []ShowtimeReq `json:"showtimes" form:"showtimes"`
 	Image          *string    `form:"-"`
 }
 
@@ -89,8 +102,10 @@ type MovieUpdateRequest struct {
 	Recommendation *bool      `form:"recommendation"`
 	Duration       *string    `form:"duration"`
 	Synopsis       *string    `form:"synopsis"`
-	GenreId        *int       `form:"genre_id"`
-	CasterId       *int       `form:"caster_id"`
+	DirectorName   *string    `form:"director_name"`
+	GenreIds       []int      `form:"genre_ids"`
+	CasterIds      []int      `form:"caster_ids"`
+	CinemaIds      []int      `form:"cinema_ids"`
 	Image          *string    `form:"-"`
 }
 
@@ -99,6 +114,19 @@ type MovieQueryParams struct {
 	Page   int    `form:"page"`
 	Search string `form:"search"`
 	Sort   string `form:"sort"` // "asc" or "desc", default "asc"
+	Month  int    `form:"month"` // For admin filtering
+	Year   int    `form:"year"`
+}
+
+type SalesStat struct {
+	Label string `json:"label"`
+	Value int    `json:"value"`
+}
+
+type DashboardStats struct {
+	SalesChart      []SalesStat `json:"sales_chart"`
+	TicketSales     []SalesStat `json:"ticket_sales"` // By Category/Location
+	AverageEarnings int         `json:"average_earnings"`
 }
 
 type Location struct {

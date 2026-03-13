@@ -121,6 +121,7 @@ CREATE TABLE movie (
   recommendation BOOLEAN,
   duration TIME,
   synopsis VARCHAR,
+  director_name VARCHAR,
   genre_id INT,
   caster_id INT,
 
@@ -131,6 +132,34 @@ CREATE TABLE movie (
   CONSTRAINT fk_movie_caster
     FOREIGN KEY (caster_id)
     REFERENCES caster(id)
+);
+
+-- =========================
+-- MANY-TO-MANY JUNCTIONS
+-- =========================
+
+CREATE TABLE movie_genres (
+  movie_id INT NOT NULL,
+  genre_id INT NOT NULL,
+  PRIMARY KEY (movie_id, genre_id),
+  FOREIGN KEY (movie_id) REFERENCES movie(id) ON DELETE CASCADE,
+  FOREIGN KEY (genre_id) REFERENCES genre(id) ON DELETE CASCADE
+);
+
+CREATE TABLE movie_casters (
+  movie_id INT NOT NULL,
+  caster_id INT NOT NULL,
+  PRIMARY KEY (movie_id, caster_id),
+  FOREIGN KEY (movie_id) REFERENCES movie(id) ON DELETE CASCADE,
+  FOREIGN KEY (caster_id) REFERENCES caster(id) ON DELETE CASCADE
+);
+
+CREATE TABLE movie_cinemas (
+  movie_id INT NOT NULL,
+  cinema_id INT NOT NULL,
+  PRIMARY KEY (movie_id, cinema_id),
+  FOREIGN KEY (movie_id) REFERENCES movie(id) ON DELETE CASCADE,
+  FOREIGN KEY (cinema_id) REFERENCES cinema(id) ON DELETE CASCADE
 );
 
 -- =========================
@@ -234,11 +263,12 @@ INSERT INTO role (name) VALUES ('USER'), ('ADMIN');
 -- default user (Seed)
 -- -------------------------
 INSERT INTO users (id, email, password) 
-VALUES (1, 'test@example.com', '$argon2id$v=19$m=65536,t=3,p=4$vP/WfW9lK9vY7K/k9I1fBw$Z7Q9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a') -- password: password123 (hashed)
+VALUES (1, 'test@example.com', '$argon2id$v=19$m=65536,t=3,p=4$vP/WfW9lK9vY7K/k9I1fBw$Z7Q9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a'), -- password: password123 (hashed)
+       (2, 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$vP/WfW9lK9vY7K/k9I1fBw$Z7Q9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a') -- password: password123 (hashed)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO profile (id, user_id, role_id, first_name, last_name)
-VALUES (1, 1, 1, 'Test', 'User')
+VALUES (1, 1, 1, 'Test', 'User'), (2, 2, 2, 'Admin', 'User')
 ON CONFLICT (id) DO NOTHING;
 
 

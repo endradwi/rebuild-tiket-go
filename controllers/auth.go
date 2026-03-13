@@ -84,6 +84,7 @@ func Login(c *gin.Context) {
 
 	tokenJWT, err := lib.GenerateTokenJwt(map[string]interface{}{
 		"userId": dbUser.Id,
+		"role":   dbUser.RoleName,
 	})
 	if err != nil {
 		c.JSON(500, lib.Response{
