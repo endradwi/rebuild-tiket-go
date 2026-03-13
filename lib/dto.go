@@ -15,6 +15,11 @@ type UserRole struct {
 	RoleId int `json:"role_id" form:"role_id"`
 }
 
+type RegisterRequest struct {
+	Email    string `json:"email" form:"email" binding:"required,email"`
+	Password string `json:"password" form:"password" binding:"required"`
+}
+
 type Response struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`

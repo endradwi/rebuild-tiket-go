@@ -142,7 +142,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lib.User"
+                            "$ref": "#/definitions/lib.RegisterRequest"
                         }
                     }
                 ],
@@ -209,7 +209,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/lib.UserRole"
+                            "$ref": "#/definitions/lib.RegisterRequest"
                         }
                     }
                 ],
@@ -923,6 +923,11 @@ const docTemplate = `{
         },
         "/orders/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve order summary for the Payment Page",
                 "consumes": [
                     "application/json"
@@ -979,6 +984,11 @@ const docTemplate = `{
         },
         "/orders/{id}/payment": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Step 3: Submit personal info and payment method to complete the order",
                 "consumes": [
                     "application/json"
@@ -1044,6 +1054,11 @@ const docTemplate = `{
         },
         "/orders/{id}/ticket": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve the final ticket summary for a specific order",
                 "consumes": [
                     "application/json"
@@ -1694,6 +1709,21 @@ const docTemplate = `{
                 }
             }
         },
+        "lib.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "lib.ResetPasswordRequest": {
             "type": "object",
             "properties": {
@@ -1799,17 +1829,6 @@ const docTemplate = `{
                 },
                 "point": {
                     "type": "integer"
-                }
-            }
-        },
-        "lib.UserRole": {
-            "type": "object",
-            "properties": {
-                "role_id": {
-                    "type": "integer"
-                },
-                "user": {
-                    "$ref": "#/definitions/lib.User"
                 }
             }
         }

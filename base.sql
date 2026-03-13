@@ -271,6 +271,10 @@ INSERT INTO profile (id, user_id, role_id, first_name, last_name)
 VALUES (1, 1, 1, 'Test', 'User'), (2, 2, 2, 'Admin', 'User')
 ON CONFLICT (id) DO NOTHING;
 
+-- Reset sequences to prevent duplicate key errors during registration
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+SELECT setval('profile_id_seq', (SELECT MAX(id) FROM profile));
+
 
 -- =============================================================
 -- SEED DATA

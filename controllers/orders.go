@@ -89,6 +89,7 @@ func CreateOrder(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        id    path      int     true  "Order ID"
+// @Security     BearerAuth
 // @Success      200   {object}  lib.Response{result=lib.Order}
 // @Failure      400   {object}  lib.Response
 // @Failure      404   {object}  lib.Response
@@ -118,6 +119,7 @@ func GetOrderDetails(c *gin.Context) {
 // @Produce      json
 // @Param        id       path      int                 true  "Order ID"
 // @Param        payment  body      lib.PaymentRequest  true  "Payment Details"
+// @Security     BearerAuth
 // @Success      200      {object}  lib.Response{result=lib.Payment}
 // @Failure      400      {object}  lib.Response
 // @Failure      500      {object}  lib.Response
@@ -152,6 +154,7 @@ func ProcessPayment(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        id    path      int     true  "Order ID"
+// @Security     BearerAuth
 // @Success      200   {object}  lib.Response{result=lib.Order}
 // @Failure      400   {object}  lib.Response
 // @Failure      404   {object}  lib.Response

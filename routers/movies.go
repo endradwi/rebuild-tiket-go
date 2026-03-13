@@ -2,6 +2,7 @@ package routers
 
 import (
 	"tiket/controllers"
+	"tiket/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,9 +15,10 @@ func MovieRouter(router *gin.RouterGroup) {
 	movieRoutes.GET("/:id", controllers.GetMovieById)
 	movieRoutes.GET("/:id/showtimes", controllers.GetMovieShowtimes)
 
-	// Admin protected routes can be added later, for now we keep it standard
-	// You might want to wrap these in `middleware.AuthMiddleware()` if needed
-	movieRoutes.POST("", controllers.CreateMovie)
-	movieRoutes.PATCH("/:id", controllers.UpdateMovie)
-	movieRoutes.DELETE("/:id", controllers.DeleteMovie)
+	// Admin protected routes
+	protectedRoutes := movieRoutes.Group("")
+	protectedRoutes.Use(middleware.AuthMiddleware())
+	protectedRoutes.POST("", controllers.CreateMovie)
+	protectedRoutes.PATCH("/:id", controllers.UpdateMovie)
+	protectedRoutes.DELETE("/:id", controllers.DeleteMovie)
 }

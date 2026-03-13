@@ -18,20 +18,20 @@ import (
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user  body      lib.UserRole  true  "User Registration Details"
+// @Param        user  body      lib.RegisterRequest  true  "User Registration Details"
 // @Success      200   {object}  lib.Response
 // @Failure      400   {object}  lib.Response
 // @Failure      500   {object}  lib.Response
 // @Router       /auth/register [post]
 func Register(c *gin.Context) {
-		var user lib.UserRole
-		if err := c.ShouldBind(&user); err != nil {
-			c.JSON(400, lib.Response{
-				Status:  400,
-				Message: "bad request",
-			})
-			return
-		}
+	var user lib.RegisterRequest
+	if err := c.ShouldBind(&user); err != nil {
+		c.JSON(400, lib.Response{
+			Status:  400,
+			Message: "bad request",
+		})
+		return
+	}
 
 	err := models.Register(user)
 	if err != nil {
@@ -63,14 +63,14 @@ func Register(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user  body      lib.User  true  "User Credentials"
+// @Param        user  body      lib.RegisterRequest  true  "User Credentials"
 // @Success      200   {object}  lib.Response{result=map[string]string} "Success response with token"
 // @Failure      400   {object}  lib.Response
 // @Failure      404   {object}  lib.Response
 // @Failure      500   {object}  lib.Response
 // @Router       /auth/login [post]
 func Login(c *gin.Context) {
-	var user lib.User
+	var user lib.RegisterRequest
 	if err := c.ShouldBind(&user); err != nil {
 		c.JSON(400, lib.Response{
 			Status: 400,
@@ -78,7 +78,7 @@ func Login(c *gin.Context) {
 		})
 	}
 
-	dbUser, err := models.FindEmail(user)
+	dbUser, err := models.FindEmail(user.Email)
 	if err != nil {
 		c.JSON(404, lib.Response{
 			Status:  404,
@@ -149,7 +149,7 @@ func ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	dbUser, err := models.FindEmail(user)
+	dbUser, err := models.FindEmail(user.Email)
 	if err != nil {
 		c.JSON(404, lib.Response{
 			Status:  404,

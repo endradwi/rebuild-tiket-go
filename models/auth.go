@@ -2,77 +2,55 @@ package models
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"tiket/lib"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
-func Register(user lib.UserRole) error {
+func Register(req lib.RegisterRequest) error {
 	pgConn := lib.InitDB()
-
 	defer pgConn.Close(context.Background())
-	
 
-	//Create hash password
-		hash, err := lib.HashPassword(user.User.Password)
-
-		if err != nil {
-			return  fmt.Errorf("hashing password: %w", err)
-		}
-
-	// Ambil role id
-	var roleId int
-	if user.RoleId != 0 {
-		roleId = user.RoleId
-	} else {
-		
-		// Cari dari DB
-		err = pgConn.QueryRow(context.Background(), `SELECT id FROM role WHERE name = $1`, "USER").Scan(&roleId)
-		if err != nil {
-			return  fmt.Errorf("getting role id: %w", err)
-		}
+	// Create hash password
+	hash, err := lib.HashPassword(req.Password)
+	if err != nil {
+		return fmt.Errorf("hashing password: %w", err)
 	}
 
-	_, err = FindEmail(user.User)
-	
-	// If FindEmail returns no error, it means the email WAS found, which is an error for registration.
-	if err == nil {
+	// Default to USER role
+	var roleId int
+	err = pgConn.QueryRow(context.Background(), `SELECT id FROM role WHERE name = $1`, "USER").Scan(&roleId)
+	if err != nil {
+		return fmt.Errorf("getting role id: %w", err)
+	}
+
+	// Check if email already exists
+	var exists bool
+	err = pgConn.QueryRow(context.Background(), `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`, req.Email).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("checking email existence: %w", err)
+	}
+	if exists {
 		return fmt.Errorf("email already exists")
 	}
 
-	// If FindEmail returns an error, we need to check if it's the "no rows" error.
-	// FindEmail wraps the error: fmt.Errorf("checking email existence: %w", err)
-	// errors.Is handles wrapped errors automatically.
-	if !errors.Is(err, pgx.ErrNoRows) {
-		// If it's some OTHER error (db connection, etc.), return that error.
-		return fmt.Errorf("checking email existence: %w", err)
-	}
-
-	// If we are here, err is pgx.ErrNoRows, which means the email is NOT in the database.
-	// This is exactly what we want for a new registration.
-
-	// Insert ke dalam table
+	// Insert into users table
 	var userId int
-
-	err = pgConn.QueryRow(context.Background(), `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`, user.User.Email, hash).Scan(&userId)
-
+	err = pgConn.QueryRow(context.Background(), `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`, req.Email, hash).Scan(&userId)
 	if err != nil {
-		return  fmt.Errorf("inserting user: %w", err)
+		return fmt.Errorf("inserting user: %w", err)
 	}
 
-	// Exec di gunakan untuk melakukan insert tanpa returning
-	_,err = pgConn.Exec(context.Background(), `INSERT INTO profile (user_id, role_id) VALUES ($1, $2)`, userId, roleId)
+	// Insert into profile table
+	_, err = pgConn.Exec(context.Background(), `INSERT INTO profile (user_id, role_id) VALUES ($1, $2)`, userId, roleId)
 	if err != nil {
-		return  fmt.Errorf("inserting profile: %w", err)
+		return fmt.Errorf("inserting profile: %w", err)
 	}
 
-	return  nil
+	return nil
 }
 
-func FindEmail(user lib.User) (lib.User, error) {
+func FindEmail(email string) (lib.User, error) {
 	pgConn := lib.InitDB()
 
 	defer pgConn.Close(context.Background())
@@ -85,9 +63,9 @@ func FindEmail(user lib.User) (lib.User, error) {
 		JOIN profile p ON u.id = p.user_id
 		JOIN role r ON p.role_id = r.id
 		WHERE u.email = $1
-	`, user.Email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password, &dbUser.RoleName)
+	`, email).Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password, &dbUser.RoleName)
 	if err != nil {
-		return user, fmt.Errorf("checking email existence: %w", err)
+		return lib.User{}, fmt.Errorf("checking email existence: %w", err)
 	}
 
 	return dbUser, nil

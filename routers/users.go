@@ -17,14 +17,14 @@ func UserRouter(router *gin.RouterGroup) {
 	protectedRoutes := userRoutes.Group("")
 	protectedRoutes.Use(middleware.AuthMiddleware())
 	
-	protectedRoutes.GET("/:id", controllers.GetUserById)
 	// Profile endpoints
 	protectedRoutes.GET("/profile", controllers.GetProfile)
 	// PATCH method combined with profile image upload capability
 	protectedRoutes.PATCH("/profile", controllers.UpdateProfile)
 
-	protectedRoutes.GET("/orders", controllers.GetUserOrders)
+	protectedRoutes.GET("/history", controllers.GetUserOrders)
 
+	protectedRoutes.GET("/:id", controllers.GetUserById)
 	// Generic DELETE by ID (Can be protected by admin middleware later)
 	protectedRoutes.DELETE("/:id", controllers.DeleteUser)
 }

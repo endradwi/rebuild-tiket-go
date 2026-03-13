@@ -165,6 +165,16 @@ definitions:
     - payment_method
     - phone_number
     type: object
+  lib.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   lib.ResetPasswordRequest:
     properties:
       password:
@@ -234,13 +244,6 @@ definitions:
         type: string
       point:
         type: integer
-    type: object
-  lib.UserRole:
-    properties:
-      role_id:
-        type: integer
-      user:
-        $ref: '#/definitions/lib.User'
     type: object
 host: localhost:8888
 info:
@@ -327,7 +330,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/lib.User'
+          $ref: '#/definitions/lib.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -368,7 +371,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/lib.UserRole'
+          $ref: '#/definitions/lib.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -818,6 +821,8 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
       summary: Get order details
       tags:
       - orders
@@ -859,6 +864,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
       summary: Process payment
       tags:
       - orders
@@ -893,6 +900,8 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
       summary: Get ticket result
       tags:
       - orders

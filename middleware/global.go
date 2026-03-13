@@ -11,8 +11,9 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenHeader := c.GetHeader("Authorization")
 		if tokenHeader == "" {
-			c.JSON(401, gin.H{
-				"error": "Unauthorized",
+			c.JSON(401, lib.Response{
+				Status:  401,
+				Message: "Unauthorized",
 			})
 			c.Abort()
 			return
@@ -21,8 +22,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Standard format for Authorization header: "Bearer <token>"
 		parts := strings.Split(tokenHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(401, gin.H{
-				"error": "Unauthorized: Invalid token format",
+			c.JSON(401, lib.Response{
+				Status:  401,
+				Message: "Unauthorized: Invalid token format",
 			})
 			c.Abort()
 			return
@@ -33,8 +35,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Verify the token
 		claims, err := lib.VerifyTokenJwt(tokenString)
 		if err != nil {
-			c.JSON(401, gin.H{
-				"error": "Unauthorized: " + err.Error(),
+			c.JSON(401, lib.Response{
+				Status:  401,
+				Message: "Unauthorized: " + err.Error(),
 			})
 			c.Abort()
 			return
