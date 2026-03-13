@@ -352,15 +352,45 @@ WHERE NOT EXISTS (SELECT 1 FROM cinema LIMIT 1);
 -- -------------------------
 -- movie (100 rows)
 -- -------------------------
-INSERT INTO movie (image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id)
-SELECT image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id
+INSERT INTO movie (image, title, released_at, recommendation, duration, synopsis, director_name)
+SELECT image, title, released_at, recommendation, duration, synopsis, director_name
 FROM (VALUES
-  ('https://picsum.photos/seed/movie_1/400/600', 'Spider-Man: Homecoming', '2017-06-28'::TIMESTAMP, TRUE,  '02:13:00'::TIME, 'Peter Parker tries to balance his life as an ordinary high school student in Queens with his superhero alter-ego Spider-Man.', 1, 5),
-  ('https://picsum.photos/seed/movie_2/400/600', 'Inception',             '2010-07-16'::TIMESTAMP, TRUE,  '02:28:00'::TIME, 'A thief who enters the dreams of others.',            8, 1),
-  ('https://picsum.photos/seed/movie_3/400/600', 'The Dark Knight',       '2008-07-18'::TIMESTAMP, TRUE,  '02:32:00'::TIME, 'Batman faces the Joker in Gotham City.',               1, 3),
-  ('https://picsum.photos/seed/movie_4/400/600', 'Avengers: Endgame',     '2019-04-26'::TIMESTAMP, TRUE,  '03:02:00'::TIME, 'The Avengers assemble for a final showdown.',          1, 5)
-) AS v(image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id)
+  ('https://picsum.photos/seed/movie_1/400/600', 'Spider-Man: Homecoming', '2017-06-28'::TIMESTAMP, TRUE,  '02:13:00'::TIME, 'Peter Parker tries to balance his life as an ordinary high school student in Queens with his superhero alter-ego Spider-Man.', 'Jon Watts'),
+  ('https://picsum.photos/seed/movie_2/400/600', 'Inception',             '2010-07-16'::TIMESTAMP, TRUE,  '02:28:00'::TIME, 'A thief who enters the dreams of others.',            'Christopher Nolan'),
+  ('https://picsum.photos/seed/movie_3/400/600', 'The Dark Knight',       '2008-07-18'::TIMESTAMP, TRUE,  '02:32:00'::TIME, 'Batman faces the Joker in Gotham City.',               'Christopher Nolan'),
+  ('https://picsum.photos/seed/movie_4/400/600', 'Avengers: Endgame',     '2019-04-26'::TIMESTAMP, TRUE,  '03:02:00'::TIME, 'The Avengers assemble for a final showdown.',          'Anthony & Joe Russo')
+) AS v(image, title, released_at, recommendation, duration, synopsis, director_name)
 WHERE NOT EXISTS (SELECT 1 FROM movie LIMIT 1);
+
+-- -------------------------
+-- junction data (Seed)
+-- -------------------------
+INSERT INTO movie_genres (movie_id, genre_id)
+SELECT movie_id, genre_id FROM (VALUES
+  (1, 1), (1, 2), -- Action, Adventure
+  (2, 8), (2, 9), -- Sci-Fi, Thriller
+  (3, 1), (3, 9), -- Action, Thriller
+  (4, 1), (4, 2)  -- Action, Adventure
+) AS v(movie_id, genre_id)
+WHERE NOT EXISTS (SELECT 1 FROM movie_genres LIMIT 1);
+
+INSERT INTO movie_casters (movie_id, caster_id)
+SELECT movie_id, caster_id FROM (VALUES
+  (1, 5), (1, 7), -- Robert Downey Jr., Chris Evans
+  (2, 1), (2, 10), -- Leonardo DiCaprio, Margot Robbie
+  (3, 3), (3, 4), -- Tom Hanks, Natalie Portman
+  (4, 5), (4, 7), (4, 2) -- Robert Downey Jr., Chris Evans, Scarlett Johansson
+) AS v(movie_id, caster_id)
+WHERE NOT EXISTS (SELECT 1 FROM movie_casters LIMIT 1);
+
+INSERT INTO movie_cinemas (movie_id, cinema_id)
+SELECT movie_id, cinema_id FROM (VALUES
+  (1, 1), (1, 2), (1, 3),
+  (2, 1), (2, 4),
+  (3, 2), (3, 5),
+  (4, 1), (4, 2), (4, 3), (4, 4), (4, 5)
+) AS v(movie_id, cinema_id)
+WHERE NOT EXISTS (SELECT 1 FROM movie_cinemas LIMIT 1);
 
 -- -------------------------
 -- movie_showtimes (Seed)

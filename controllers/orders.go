@@ -10,6 +10,16 @@ import (
 )
 
 // GetSeats retrieves all seats and marks occupied ones for a showtime
+// GetSeats godoc
+// @Summary      Get seats for showtime
+// @Description  Retrieve all seats and their occupancy status for a specific showtime
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Param        showtime_id  query     int     true  "Showtime ID"
+// @Success      200   {object}  lib.Response{result=[]lib.SeatWithStatus}
+// @Failure      500   {object}  lib.Response
+// @Router       /orders/seats [get]
 func GetSeats(c *gin.Context) {
 	showtimeIdStr := c.Query("showtime_id")
 	showtimeId, _ := strconv.Atoi(showtimeIdStr)
@@ -26,14 +36,9 @@ func GetSeats(c *gin.Context) {
 		occupiedMap[id] = true
 	}
 
-	type SeatWithStatus struct {
-		lib.Seat
-		IsOccupied bool `json:"is_occupied"`
-	}
-
-	var results []SeatWithStatus
+	var results []lib.SeatWithStatus
 	for _, s := range seats {
-		results = append(results, SeatWithStatus{
+		results = append(results, lib.SeatWithStatus{
 			Seat:       s,
 			IsOccupied: occupiedMap[s.Id],
 		})
@@ -42,7 +47,18 @@ func GetSeats(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: results})
 }
 
-// CreateOrder handles Step 2 of the flow (Seat Selection -> Checkout)
+// CreateOrder godoc
+// @Summary      Create an order
+// @Description  Step 2: Initialize an order with selected seats
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        order  body      lib.OrderCreateRequest  true  "Order Details"
+// @Success      201   {object}  lib.Response{result=lib.Order}
+// @Failure      400   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /orders [post]
 func CreateOrder(c *gin.Context) {
 	userIdAny, exists := c.Get("userId")
 	var userId int
@@ -66,6 +82,17 @@ func CreateOrder(c *gin.Context) {
 }
 
 // GetOrderDetails handles fetching order summary for the Payment Page
+// GetOrderDetails godoc
+// @Summary      Get order details
+// @Description  Retrieve order summary for the Payment Page
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int     true  "Order ID"
+// @Success      200   {object}  lib.Response{result=lib.Order}
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Router       /orders/{id} [get]
 func GetOrderDetails(c *gin.Context) {
 	orderIdStr := c.Param("id")
 	orderId, err := strconv.Atoi(orderIdStr)
@@ -83,7 +110,18 @@ func GetOrderDetails(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: order})
 }
 
-// ProcessPayment handles Step 3 of the flow (Personal Info + Payment Method -> Pay now)
+// ProcessPayment godoc
+// @Summary      Process payment
+// @Description  Step 3: Submit personal info and payment method to complete the order
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int                 true  "Order ID"
+// @Param        payment  body      lib.PaymentRequest  true  "Payment Details"
+// @Success      200      {object}  lib.Response{result=lib.Payment}
+// @Failure      400      {object}  lib.Response
+// @Failure      500      {object}  lib.Response
+// @Router       /orders/{id}/payment [post]
 func ProcessPayment(c *gin.Context) {
 	orderIdStr := c.Param("id")
 	orderId, err := strconv.Atoi(orderIdStr)
@@ -107,7 +145,17 @@ func ProcessPayment(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Payment successful", Result: payment})
 }
 
-// GetTicketResult retrieves the ticket summary for a specific order
+// GetTicketResult godoc
+// @Summary      Get ticket result
+// @Description  Retrieve the final ticket summary for a specific order
+// @Tags         orders
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int     true  "Order ID"
+// @Success      200   {object}  lib.Response{result=lib.Order}
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Router       /orders/{id}/ticket [get]
 func GetTicketResult(c *gin.Context) {
 	orderIdStr := c.Param("id")
 	orderId, err := strconv.Atoi(orderIdStr)

@@ -1,0 +1,1142 @@
+basePath: /
+definitions:
+  lib.DashboardStats:
+    properties:
+      average_earnings:
+        type: integer
+      sales_chart:
+        items:
+          $ref: '#/definitions/lib.SalesStat'
+        type: array
+      ticket_sales:
+        description: By Category/Location
+        items:
+          $ref: '#/definitions/lib.SalesStat'
+        type: array
+    type: object
+  lib.ListResponse:
+    properties:
+      message:
+        type: string
+      page_info:
+        $ref: '#/definitions/lib.PageInfo'
+      result: {}
+      status:
+        type: integer
+    type: object
+  lib.Movie:
+    properties:
+      caster_id:
+        description: Legacy
+        type: integer
+      casters:
+        items:
+          type: string
+        type: array
+      director_name:
+        type: string
+      duration:
+        type: string
+      genre_id:
+        description: 'Legacy: keeping for now but will use Genres'
+        type: integer
+      genres:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      image:
+        type: string
+      recommendation:
+        type: boolean
+      released_at:
+        type: string
+      synopsis:
+        type: string
+      title:
+        type: string
+    type: object
+  lib.MovieShowtime:
+    properties:
+      cinema_id:
+        type: integer
+      id:
+        type: integer
+      movie_id:
+        type: integer
+      price:
+        type: integer
+      show_date:
+        type: string
+      show_time:
+        type: string
+    type: object
+  lib.Order:
+    properties:
+      cinema_name:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+      movie_title:
+        type: string
+      order_number:
+        type: string
+      phone_number:
+        type: string
+      profile_id:
+        type: integer
+      seats:
+        items:
+          $ref: '#/definitions/lib.Seat'
+        type: array
+      show_date:
+        type: string
+      show_time:
+        type: string
+      showtime_id:
+        type: integer
+      status:
+        type: string
+      total_price:
+        type: integer
+    type: object
+  lib.OrderCreateRequest:
+    properties:
+      seat_ids:
+        items:
+          type: integer
+        type: array
+      showtime_id:
+        type: integer
+    required:
+    - seat_ids
+    - showtime_id
+    type: object
+  lib.PageInfo:
+    properties:
+      current_page:
+        type: integer
+      next_page:
+        type: integer
+      prev_page:
+        type: integer
+      total_data:
+        type: integer
+      total_page:
+        type: integer
+    type: object
+  lib.Payment:
+    properties:
+      expired_at:
+        type: string
+      id:
+        type: integer
+      order_id:
+        type: integer
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+      qr_code:
+        type: string
+      total_payment:
+        type: integer
+    type: object
+  lib.PaymentRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      payment_method:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - full_name
+    - payment_method
+    - phone_number
+    type: object
+  lib.ResetPasswordRequest:
+    properties:
+      password:
+        type: string
+      token:
+        type: string
+    type: object
+  lib.Response:
+    properties:
+      message:
+        type: string
+      result: {}
+      status:
+        type: integer
+    type: object
+  lib.SalesStat:
+    properties:
+      label:
+        type: string
+      value:
+        type: integer
+    type: object
+  lib.Seat:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
+  lib.SeatWithStatus:
+    properties:
+      id:
+        type: integer
+      is_occupied:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
+  lib.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+      role_name:
+        type: string
+    type: object
+  lib.UserProfile:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      point:
+        type: integer
+    type: object
+  lib.UserRole:
+    properties:
+      role_id:
+        type: integer
+      user:
+        $ref: '#/definitions/lib.User'
+    type: object
+host: localhost:8888
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API for Movie Ticket Booking System
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Tikitz API
+  version: "1.0"
+paths:
+  /admin/stats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve sales and ticket statistics for the admin dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.DashboardStats'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard statistics
+      tags:
+      - admin
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send a reset password link to the user's email
+      parameters:
+      - description: User Email
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/lib.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Request password reset
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: User Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/lib.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response with token
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Login user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/lib.UserRole'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Verify token and update user password
+      parameters:
+      - description: Reset Token
+        in: query
+        name: token
+        type: string
+      - description: New Password Details
+        in: body
+        name: reset
+        required: true
+        schema:
+          $ref: '#/definitions/lib.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Reset password
+      tags:
+      - auth
+  /movies:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated list of movies with optional filters
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by title
+        in: query
+        name: search
+        type: string
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Filter by release month
+        in: query
+        name: month
+        type: integer
+      - description: Filter by release year
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.ListResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/lib.Movie'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Get all movies
+      tags:
+      - movies
+    post:
+      consumes:
+      - multipart/form-data
+      description: Insert a new movie into the database with its many-to-many relations
+        and showtimes
+      parameters:
+      - description: Movie Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Release Date (RFC3339)
+        in: formData
+        name: released_at
+        type: string
+      - description: Is Recommended
+        in: formData
+        name: recommendation
+        type: boolean
+      - description: Duration
+        in: formData
+        name: duration
+        type: string
+      - description: Synopsis
+        in: formData
+        name: synopsis
+        type: string
+      - description: Director Name
+        in: formData
+        name: director_name
+        type: string
+      - collectionFormat: csv
+        description: Genre IDs
+        in: formData
+        items:
+          type: integer
+        name: genre_ids
+        type: array
+      - collectionFormat: csv
+        description: Caster IDs
+        in: formData
+        items:
+          type: integer
+        name: caster_ids
+        type: array
+      - collectionFormat: csv
+        description: Cinema IDs
+        in: formData
+        items:
+          type: integer
+        name: cinema_ids
+        type: array
+      - description: Movie Poster
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Movie'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new movie
+      tags:
+      - movies
+  /movies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a movie from the database by ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete movie
+      tags:
+      - movies
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information about a single movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Movie'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Get movie by ID
+      tags:
+      - movies
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update movie details by ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Movie Title
+        in: formData
+        name: title
+        type: string
+      - description: Release Date (RFC3339)
+        in: formData
+        name: released_at
+        type: string
+      - description: Is Recommended
+        in: formData
+        name: recommendation
+        type: boolean
+      - description: Duration
+        in: formData
+        name: duration
+        type: string
+      - description: Synopsis
+        in: formData
+        name: synopsis
+        type: string
+      - description: Director Name
+        in: formData
+        name: director_name
+        type: string
+      - collectionFormat: csv
+        description: Genre IDs
+        in: formData
+        items:
+          type: integer
+        name: genre_ids
+        type: array
+      - collectionFormat: csv
+        description: Caster IDs
+        in: formData
+        items:
+          type: integer
+        name: caster_ids
+        type: array
+      - collectionFormat: csv
+        description: Cinema IDs
+        in: formData
+        items:
+          type: integer
+        name: cinema_ids
+        type: array
+      - description: Movie Poster
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Movie'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Update movie
+      tags:
+      - movies
+  /movies/{id}/showtimes:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve showtimes for a specific movie, optionally filtered by
+        location
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Filter by Location ID
+        in: query
+        name: location_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/lib.MovieShowtime'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Get movie showtimes
+      tags:
+      - movies
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: 'Step 2: Initialize an order with selected seats'
+      parameters:
+      - description: Order Details
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/lib.OrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Order'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Create an order
+      tags:
+      - orders
+  /orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve order summary for the Payment Page
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Order'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Get order details
+      tags:
+      - orders
+  /orders/{id}/payment:
+    post:
+      consumes:
+      - application/json
+      description: 'Step 3: Submit personal info and payment method to complete the
+        order'
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Payment Details
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/lib.PaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Payment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Process payment
+      tags:
+      - orders
+  /orders/{id}/ticket:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the final ticket summary for a specific order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.Order'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Get ticket result
+      tags:
+      - orders
+  /orders/seats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all seats and their occupancy status for a specific showtime
+      parameters:
+      - description: Showtime ID
+        in: query
+        name: showtime_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/lib.SeatWithStatus'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      summary: Get seats for showtime
+      tags:
+      - orders
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all users (admin access required)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/lib.UserProfile'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a user account by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user profile by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.UserProfile'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+  /users/history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the order history of the currently logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/lib.Order'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user orders
+      tags:
+      - users
+  /users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the profile of the currently logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.UserProfile'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update the profile of the currently logged-in user
+      parameters:
+      - description: Full Name
+        in: formData
+        name: fullName
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        type: string
+      - description: Phone Number
+        in: formData
+        name: phoneNumber
+        type: string
+      - description: Profile Image
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lib.Response'
+            - properties:
+                result:
+                  $ref: '#/definitions/lib.UserProfile'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.Response'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

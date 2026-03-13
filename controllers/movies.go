@@ -9,7 +9,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateMovie handles creating a new movie
+// CreateMovie godoc
+// @Summary      Create a new movie
+// @Description  Insert a new movie into the database with its many-to-many relations and showtimes
+// @Tags         movies
+// @Accept       mpfd
+// @Produce      json
+// @Security     BearerAuth
+// @Param        title           formData  string  true   "Movie Title"
+// @Param        released_at     formData  string  false  "Release Date (RFC3339)"
+// @Param        recommendation  formData  bool    false  "Is Recommended"
+// @Param        duration        formData  string  false  "Duration"
+// @Param        synopsis        formData  string  false  "Synopsis"
+// @Param        director_name   formData  string  false  "Director Name"
+// @Param        genre_ids       formData  []int   false  "Genre IDs"
+// @Param        caster_ids      formData  []int   false  "Caster IDs"
+// @Param        cinema_ids      formData  []int   false  "Cinema IDs"
+// @Param        image           formData  file    false  "Movie Poster"
+// @Success      201   {object}  lib.Response{result=lib.Movie}
+// @Failure      400   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /movies [post]
 func CreateMovie(c *gin.Context) {
 	var req lib.MovieCreateRequest
 	
@@ -71,7 +91,22 @@ func CreateMovie(c *gin.Context) {
 	c.JSON(http.StatusCreated, lib.Response{Status: 201, Message: "Movie created successfully", Result: movie})
 }
 
-// GetAllMovies handles retrieving all movies
+// GetAllMovies godoc
+// @Summary      Get all movies
+// @Description  Retrieve a paginated list of movies with optional filters
+// @Tags         movies
+// @Accept       json
+// @Produce      json
+// @Param        page    query     int     false  "Page number"
+// @Param        limit   query     int     false  "Items per page"
+// @Param        search  query     string  false  "Search by title"
+// @Param        sort    query     string  false  "Sort order (asc/desc)"
+// @Param        month   query     int     false  "Filter by release month"
+// @Param        year    query     int     false  "Filter by release year"
+// @Success      200   {object}  lib.ListResponse{result=[]lib.Movie}
+// @Failure      400   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /movies [get]
 func GetAllMovies(c *gin.Context) {
 	var params lib.MovieQueryParams
 
@@ -94,7 +129,7 @@ func GetAllMovies(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, lib.Response{
+	c.JSON(http.StatusOK, lib.ListResponse{
 		Status:   200,
 		Message:  "success",
 		Result:   movies,
@@ -102,7 +137,17 @@ func GetAllMovies(c *gin.Context) {
 	})
 }
 
-// GetMovieById handles retrieving a single movie by ID
+// GetMovieById godoc
+// @Summary      Get movie by ID
+// @Description  Retrieve detailed information about a single movie
+// @Tags         movies
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int     true  "Movie ID"
+// @Success      200   {object}  lib.Response{result=lib.Movie}
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Router       /movies/{id} [get]
 func GetMovieById(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -120,7 +165,28 @@ func GetMovieById(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: movie})
 }
 
-// UpdateMovie handles updating a movie using PATCH fields
+// UpdateMovie godoc
+// @Summary      Update movie
+// @Description  Update movie details by ID
+// @Tags         movies
+// @Accept       mpfd
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id              path      int     true   "Movie ID"
+// @Param        title           formData  string  false  "Movie Title"
+// @Param        released_at     formData  string  false  "Release Date (RFC3339)"
+// @Param        recommendation  formData  bool    false  "Is Recommended"
+// @Param        duration        formData  string  false  "Duration"
+// @Param        synopsis        formData  string  false  "Synopsis"
+// @Param        director_name   formData  string  false  "Director Name"
+// @Param        genre_ids       formData  []int   false  "Genre IDs"
+// @Param        caster_ids      formData  []int   false  "Caster IDs"
+// @Param        cinema_ids      formData  []int   false  "Cinema IDs"
+// @Param        image           formData  file    false  "Movie Poster"
+// @Success      200   {object}  lib.Response{result=lib.Movie}
+// @Failure      400   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /movies/{id} [patch]
 func UpdateMovie(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -188,7 +254,18 @@ func UpdateMovie(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Movie updated successfully", Result: updatedMovie})
 }
 
-// DeleteMovie handles deleting a movie by ID
+// DeleteMovie godoc
+// @Summary      Delete movie
+// @Description  Remove a movie from the database by ID
+// @Tags         movies
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      int     true  "Movie ID"
+// @Success      200   {object}  lib.Response
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Router       /movies/{id} [delete]
 func DeleteMovie(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -205,7 +282,19 @@ func DeleteMovie(c *gin.Context) {
 
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Movie deleted successfully"})
 }
-// GetMovieShowtimes retrieves showtimes for a specific movie, optionally filtered by location
+
+// GetMovieShowtimes godoc
+// @Summary      Get movie showtimes
+// @Description  Retrieve showtimes for a specific movie, optionally filtered by location
+// @Tags         movies
+// @Accept       json
+// @Produce      json
+// @Param        id           path      int     true   "Movie ID"
+// @Param        location_id  query     int     false  "Filter by Location ID"
+// @Success      200   {object}  lib.Response{result=[]lib.MovieShowtime}
+// @Failure      400   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /movies/{id}/showtimes [get]
 func GetMovieShowtimes(c *gin.Context) {
 	idParam := c.Param("id")
 	movieId, err := strconv.Atoi(idParam)

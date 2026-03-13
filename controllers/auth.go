@@ -12,6 +12,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// Register godoc
+// @Summary      Register a new user
+// @Description  Create a new user account
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body      lib.UserRole  true  "User Registration Details"
+// @Success      200   {object}  lib.Response
+// @Failure      400   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /auth/register [post]
 func Register(c *gin.Context) {
 		var user lib.UserRole
 		if err := c.ShouldBind(&user); err != nil {
@@ -46,6 +57,18 @@ func Register(c *gin.Context) {
 	
 }
 
+// Login godoc
+// @Summary      Login user
+// @Description  Authenticate user and return JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body      lib.User  true  "User Credentials"
+// @Success      200   {object}  lib.Response{result=map[string]string} "Success response with token"
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /auth/login [post]
 func Login(c *gin.Context) {
 	var user lib.User
 	if err := c.ShouldBind(&user); err != nil {
@@ -104,6 +127,18 @@ func Login(c *gin.Context) {
 
 }
 
+// ForgotPassword godoc
+// @Summary      Request password reset
+// @Description  Send a reset password link to the user's email
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body      lib.User  true  "User Email"
+// @Success      200   {object}  lib.Response
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /auth/forgot-password [post]
 func ForgotPassword(c *gin.Context) {
 	var user lib.User
 	if err := c.ShouldBind(&user); err != nil {
@@ -161,6 +196,19 @@ func ForgotPassword(c *gin.Context) {
 	
 }
 
+// ValidatePasswordReset godoc
+// @Summary      Reset password
+// @Description  Verify token and update user password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        token   query     string  false  "Reset Token"
+// @Param        reset   body      lib.ResetPasswordRequest  true  "New Password Details"
+// @Success      200   {object}  lib.Response
+// @Failure      400   {object}  lib.Response
+// @Failure      404   {object}  lib.Response
+// @Failure      500   {object}  lib.Response
+// @Router       /auth/reset-password [post]
 func ValidatePasswordReset(c *gin.Context) {
 	var resetReq lib.ResetPasswordRequest
 	

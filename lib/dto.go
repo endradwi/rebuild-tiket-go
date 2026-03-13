@@ -18,6 +18,12 @@ type UserRole struct {
 type Response struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
+	Result  any    `json:"result,omitempty"`
+}
+
+type ListResponse struct {
+	Status   int       `json:"status"`
+	Message  string    `json:"message"`
 	Result   any       `json:"result,omitempty"`
 	PageInfo *PageInfo `json:"page_info,omitempty"`
 }
@@ -154,6 +160,11 @@ type Seat struct {
 	Id    int    `json:"id"`
 	Name  string `json:"name"`
 	Price int    `json:"price"`
+}
+
+type SeatWithStatus struct {
+	Seat
+	IsOccupied bool `json:"is_occupied"`
 }
 
 type Order struct {

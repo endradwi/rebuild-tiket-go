@@ -8,7 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetDashboardStats returns statistics for the admin dashboard
+// GetDashboardStats godoc
+// @Summary      Get dashboard statistics
+// @Description  Retrieve sales and ticket statistics for the admin dashboard
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200   {object}  lib.Response{result=lib.DashboardStats}
+// @Failure      500   {object}  lib.Response
+// @Router       /admin/stats [get]
 func GetDashboardStats(c *gin.Context) {
 	stats, err := models.GetDashboardStats()
 	if err != nil {
