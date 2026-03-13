@@ -38,7 +38,7 @@ CREATE TABLE profile (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR,
   last_name VARCHAR,
-  phone_number INT,
+  phone_number VARCHAR,
 image VARCHAR,
   point INT,
   tiket_status BOOLEAN,

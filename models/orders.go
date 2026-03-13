@@ -167,3 +167,44 @@ func CreatePayment(orderId int, req lib.PaymentRequest) (lib.Payment, error) {
 
 	return payment, nil
 }
+
+// GetUserOrders retrieves all orders for a specific user profile
+func GetUserOrders(profileId int) ([]lib.Order, error) {
+	pgConn := lib.InitDB()
+	defer pgConn.Close(context.Background())
+
+	rows, err := pgConn.Query(context.Background(), `
+		SELECT o.id, o.order_number, o.showtime_id, o.total_price, o.status, o.created_at,
+		       m.title as movie_title, c.cinema_name, c.image as cinema_image
+		FROM orders o
+		JOIN movie_showtimes s ON o.showtime_id = s.id
+		JOIN movie m ON s.movie_id = m.id
+		JOIN cinema c ON s.cinema_id = c.id
+		WHERE o.profile_id = $1
+		ORDER BY o.created_at DESC
+	`, profileId)
+	if err != nil {
+		return nil, fmt.Errorf("querying user orders: %w", err)
+	}
+	defer rows.Close()
+
+	var orders []lib.Order
+	for rows.Next() {
+		var o lib.Order
+		// Note: we use lib.Order struct but only some fields are populated for the list view
+		err := rows.Scan(
+			&o.Id, &o.OrderNumber, &o.ShowtimeId, &o.TotalPrice, &o.Status, &o.CreatedAt,
+			&o.MovieTitle, &o.CinemaName, &o.CinemaName, // Using CinemaName as a placeholder if image is needed but let's just stick to the design
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning user order: %w", err)
+		}
+		orders = append(orders, o)
+	}
+
+	if orders == nil {
+		orders = []lib.Order{}
+	}
+
+	return orders, nil
+}

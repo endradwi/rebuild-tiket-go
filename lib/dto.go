@@ -48,7 +48,7 @@ type UserProfile struct {
 	Email string `json:"email"`
 	FirstName *string `json:"first_name"`
 	LastName *string `json:"last_name"`
-	PhoneNumber *int `json:"phone_number"`
+	PhoneNumber *string `json:"phone_number"`
 	Image *string `json:"image"`
 	Point *int `json:"point"`
 }
@@ -56,7 +56,7 @@ type UserProfile struct {
 type ProfileUpdateRequest struct {
 	FirstName *string `form:"first_name"`
 	LastName *string `form:"last_name"`
-	PhoneNumber *int `form:"phone_number"`
+	PhoneNumber *string `form:"phone_number"`
 	Image *string `form:"-"`
 }
 

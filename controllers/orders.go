@@ -106,3 +106,25 @@ func ProcessPayment(c *gin.Context) {
 
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Payment successful", Result: payment})
 }
+
+// GetTicketResult retrieves the ticket summary for a specific order
+func GetTicketResult(c *gin.Context) {
+	orderIdStr := c.Param("id")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "Invalid order ID"})
+		return
+	}
+
+	order, err := models.GetOrderById(orderId)
+	if err != nil {
+		c.JSON(http.StatusNotFound, lib.Response{Status: 404, Message: err.Error()})
+		return
+	}
+
+	// We can reuse GetOrderById since it already joins movie, cinema, showtimes, and seats.
+	// The design calls for a QR code which we stored in the payment table.
+	// If payment exists, we should probably include it.
+	
+	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: order})
+}

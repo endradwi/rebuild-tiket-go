@@ -147,3 +147,21 @@ func DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "User deleted successfully"})
 }
+
+// GetUserOrders retrieves the current logged-in user's order history
+func GetUserOrders(c *gin.Context) {
+	userIdAny, exists := c.Get("userId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, lib.Response{Status: 401, Message: "Unauthorized"})
+		return
+	}
+
+	userId := int(userIdAny.(float64))
+	orders, err := models.GetUserOrders(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to fetch orders: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: orders})
+}

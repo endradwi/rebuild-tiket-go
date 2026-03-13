@@ -20,5 +20,6 @@ func OrderRouter(router *gin.RouterGroup) {
 
 	protectedRoutes.POST("", controllers.CreateOrder)
 	protectedRoutes.GET("/:id", controllers.GetOrderDetails)
+	protectedRoutes.GET("/:id/ticket", controllers.GetTicketResult)
 	protectedRoutes.POST("/:id/payment", controllers.ProcessPayment)
 }

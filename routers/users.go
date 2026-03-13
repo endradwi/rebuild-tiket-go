@@ -23,6 +23,8 @@ func UserRouter(router *gin.RouterGroup) {
 	// PATCH method combined with profile image upload capability
 	protectedRoutes.PATCH("/profile", controllers.UpdateProfile)
 
+	protectedRoutes.GET("/orders", controllers.GetUserOrders)
+
 	// Generic DELETE by ID (Can be protected by admin middleware later)
 	protectedRoutes.DELETE("/:id", controllers.DeleteUser)
 }
