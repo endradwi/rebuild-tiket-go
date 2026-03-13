@@ -508,7 +508,7 @@ const docTemplate = `{
         },
         "/movies/{id}": {
             "get": {
-                "description": "Retrieve detailed information about a single movie",
+                "description": "Retrieve detailed information about a single movie with consolidated and filtered showtimes",
                 "consumes": [
                     "application/json"
                 ],
@@ -526,6 +526,24 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter showtimes by Location ID",
+                        "name": "location_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter showtimes by Date (YYYY-MM-DD)",
+                        "name": "date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter showtimes by minimum Time (HH:MM:SS)",
+                        "name": "time",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -719,71 +737,6 @@ const docTemplate = `{
                                     "properties": {
                                         "result": {
                                             "$ref": "#/definitions/lib.Movie"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/movies/{id}/showtimes": {
-            "get": {
-                "description": "Retrieve showtimes for a specific movie, optionally filtered by location",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "movies"
-                ],
-                "summary": "Get movie showtimes",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Movie ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Filter by Location ID",
-                        "name": "location_id",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/lib.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "result": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/lib.MovieShowtime"
-                                            }
                                         }
                                     }
                                 }
@@ -1461,6 +1414,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "lib.CinemaShowtime": {
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "integer"
+                },
+                "show_date": {
+                    "type": "string"
+                },
+                "show_time": {
+                    "type": "string"
+                },
+                "showtime_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "lib.DashboardStats": {
             "type": "object",
             "properties": {
@@ -1501,13 +1471,21 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "caster_id": {
-                    "description": "Legacy",
                     "type": "integer"
+                },
+                "caster_name": {
+                    "type": "string"
                 },
                 "casters": {
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "cinemas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lib.MovieCinemaDetail"
                     }
                 },
                 "director_name": {
@@ -1517,8 +1495,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "genre_id": {
-                    "description": "Legacy: keeping for now but will use Genres",
                     "type": "integer"
+                },
+                "genre_name": {
+                    "type": "string"
                 },
                 "genres": {
                     "type": "array",
@@ -1546,32 +1526,35 @@ const docTemplate = `{
                 }
             }
         },
-        "lib.MovieShowtime": {
+        "lib.MovieCinemaDetail": {
             "type": "object",
             "properties": {
                 "cinema_id": {
                     "type": "integer"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "movie_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "integer"
-                },
-                "show_date": {
+                "cinema_image": {
                     "type": "string"
                 },
-                "show_time": {
+                "cinema_name": {
                     "type": "string"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "showtimes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lib.CinemaShowtime"
+                    }
                 }
             }
         },
         "lib.Order": {
             "type": "object",
             "properties": {
+                "cinema_image": {
+                    "type": "string"
+                },
                 "cinema_name": {
                     "type": "string"
                 },
@@ -1586,6 +1569,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
                 },
                 "movie_title": {
                     "type": "string"

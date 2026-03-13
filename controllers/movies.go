@@ -139,11 +139,14 @@ func GetAllMovies(c *gin.Context) {
 
 // GetMovieById godoc
 // @Summary      Get movie by ID
-// @Description  Retrieve detailed information about a single movie
+// @Description  Retrieve detailed information about a single movie with consolidated and filtered showtimes
 // @Tags         movies
 // @Accept       json
 // @Produce      json
-// @Param        id    path      int     true  "Movie ID"
+// @Param        id           path      int     true   "Movie ID"
+// @Param        location_id  query     int     false  "Filter showtimes by Location ID"
+// @Param        date         query     string  false  "Filter showtimes by Date (YYYY-MM-DD)"
+// @Param        time         query     string  false  "Filter showtimes by minimum Time (HH:MM:SS)"
 // @Success      200   {object}  lib.Response{result=lib.Movie}
 // @Failure      400   {object}  lib.Response
 // @Failure      404   {object}  lib.Response
@@ -156,7 +159,13 @@ func GetMovieById(c *gin.Context) {
 		return
 	}
 
-	movie, err := models.GetMovieById(id)
+	var params lib.MovieDetailParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "Invalid filter parameters"})
+		return
+	}
+
+	movie, err := models.GetMovieById(id, params)
 	if err != nil {
 		c.JSON(http.StatusNotFound, lib.Response{Status: 404, Message: err.Error()})
 		return
@@ -283,37 +292,3 @@ func DeleteMovie(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Movie deleted successfully"})
 }
 
-// GetMovieShowtimes godoc
-// @Summary      Get movie showtimes
-// @Description  Retrieve showtimes for a specific movie, optionally filtered by location
-// @Tags         movies
-// @Accept       json
-// @Produce      json
-// @Param        id           path      int     true   "Movie ID"
-// @Param        location_id  query     int     false  "Filter by Location ID"
-// @Success      200   {object}  lib.Response{result=[]lib.MovieShowtime}
-// @Failure      400   {object}  lib.Response
-// @Failure      500   {object}  lib.Response
-// @Router       /movies/{id}/showtimes [get]
-func GetMovieShowtimes(c *gin.Context) {
-	idParam := c.Param("id")
-	movieId, err := strconv.Atoi(idParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "Invalid movie ID"})
-		return
-	}
-
-	locationIdStr := c.Query("location_id")
-	locationId := 0
-	if locationIdStr != "" {
-		locationId, _ = strconv.Atoi(locationIdStr)
-	}
-
-	showtimes, err := models.GetShowtimesByMovie(movieId, locationId)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to fetch showtimes: " + err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: showtimes})
-}

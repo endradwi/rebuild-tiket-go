@@ -13,7 +13,6 @@ func MovieRouter(router *gin.RouterGroup) {
 	// Allow public access to getting all movies or getting a specific movie
 	movieRoutes.GET("", controllers.GetAllMovies)
 	movieRoutes.GET("/:id", controllers.GetMovieById)
-	movieRoutes.GET("/:id/showtimes", controllers.GetMovieShowtimes)
 
 	// Admin protected routes
 	protectedRoutes := movieRoutes.Group("")

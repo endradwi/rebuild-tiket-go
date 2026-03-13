@@ -81,10 +81,28 @@ type Movie struct {
 	Duration       *string    `json:"duration"`
 	Synopsis       *string    `json:"synopsis"`
 	DirectorName   *string    `json:"director_name"`
-	GenreId        *int       `json:"genre_id"`   // Legacy: keeping for now but will use Genres
-	CasterId       *int       `json:"caster_id"`  // Legacy
-	Genres         []string   `json:"genres,omitempty"`
-	Casters        []string   `json:"casters,omitempty"`
+	GenreId        *int       `json:"genre_id"`
+	GenreName      string     `json:"genre_name"`
+	CasterId       *int       `json:"caster_id"`
+	CasterName     string     `json:"caster_name"`
+	Genres         []string            `json:"genres,omitempty"`
+	Casters        []string            `json:"casters,omitempty"`
+	Cinemas        []MovieCinemaDetail `json:"cinemas,omitempty"`
+}
+
+type MovieCinemaDetail struct {
+	CinemaId     int              `json:"cinema_id"`
+	CinemaName   string           `json:"cinema_name"`
+	CinemaImage  *string          `json:"cinema_image"`
+	LocationName string           `json:"location_name"`
+	Showtimes    []CinemaShowtime `json:"showtimes"`
+}
+
+type CinemaShowtime struct {
+	ShowtimeId int    `json:"showtime_id"`
+	ShowDate   string `json:"show_date"`
+	ShowTime   string `json:"show_time"`
+	Price      int    `json:"price"`
 }
 
 type ShowtimeReq struct {
@@ -140,6 +158,12 @@ type DashboardStats struct {
 	AverageEarnings int         `json:"average_earnings"`
 }
 
+type MovieDetailParams struct {
+	LocationId int    `form:"location_id"`
+	Date       string `form:"date"`
+	Time       string `form:"time"`
+}
+
 type Location struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
@@ -150,15 +174,19 @@ type Cinema struct {
 	CinemaName   string     `json:"cinema_name"`
 	Image        *string    `json:"image"`
 	LocationId   *int       `json:"location_id"`
+	LocationName string     `json:"location_name,omitempty"`
 }
 
 type MovieShowtime struct {
-	Id       int       `json:"id"`
-	MovieId  int       `json:"movie_id"`
-	CinemaId int       `json:"cinema_id"`
-	ShowDate time.Time `json:"show_date"`
-	ShowTime string    `json:"show_time"`
-	Price    int       `json:"price"`
+	Id         int       `json:"id"`
+	MovieId    int       `json:"movie_id"`
+	MovieTitle string    `json:"movie_title"`
+	CinemaId   int       `json:"cinema_id"`
+	CinemaName string    `json:"cinema_name"`
+	LocationName string  `json:"location_name,omitempty"`
+	ShowDate   time.Time `json:"show_date"`
+	ShowTime   string    `json:"show_time"`
+	Price      int       `json:"price"`
 }
 
 type Seat struct {
@@ -185,7 +213,9 @@ type Order struct {
 	CreatedAt   time.Time     `json:"created_at"`
 	Seats       []Seat        `json:"seats,omitempty"`
 	MovieTitle  string        `json:"movie_title,omitempty"`
-	CinemaName  string        `json:"cinema_name,omitempty"`
+	CinemaName   string        `json:"cinema_name,omitempty"`
+	CinemaImage  *string       `json:"cinema_image,omitempty"`
+	LocationName string        `json:"location_name,omitempty"`
 	ShowDate    *time.Time    `json:"show_date,omitempty"`
 	ShowTime    *string       `json:"show_time,omitempty"`
 }

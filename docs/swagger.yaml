@@ -1,5 +1,16 @@
 basePath: /
 definitions:
+  lib.CinemaShowtime:
+    properties:
+      price:
+        type: integer
+      show_date:
+        type: string
+      show_time:
+        type: string
+      showtime_id:
+        type: integer
+    type: object
   lib.DashboardStats:
     properties:
       average_earnings:
@@ -27,19 +38,25 @@ definitions:
   lib.Movie:
     properties:
       caster_id:
-        description: Legacy
         type: integer
+      caster_name:
+        type: string
       casters:
         items:
           type: string
+        type: array
+      cinemas:
+        items:
+          $ref: '#/definitions/lib.MovieCinemaDetail'
         type: array
       director_name:
         type: string
       duration:
         type: string
       genre_id:
-        description: 'Legacy: keeping for now but will use Genres'
         type: integer
+      genre_name:
+        type: string
       genres:
         items:
           type: string
@@ -57,23 +74,25 @@ definitions:
       title:
         type: string
     type: object
-  lib.MovieShowtime:
+  lib.MovieCinemaDetail:
     properties:
       cinema_id:
         type: integer
-      id:
-        type: integer
-      movie_id:
-        type: integer
-      price:
-        type: integer
-      show_date:
+      cinema_image:
         type: string
-      show_time:
+      cinema_name:
         type: string
+      location_name:
+        type: string
+      showtimes:
+        items:
+          $ref: '#/definitions/lib.CinemaShowtime'
+        type: array
     type: object
   lib.Order:
     properties:
+      cinema_image:
+        type: string
       cinema_name:
         type: string
       created_at:
@@ -84,6 +103,8 @@ definitions:
         type: string
       id:
         type: integer
+      location_name:
+        type: string
       movie_title:
         type: string
       order_number:
@@ -598,13 +619,26 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve detailed information about a single movie
+      description: Retrieve detailed information about a single movie with consolidated
+        and filtered showtimes
       parameters:
       - description: Movie ID
         in: path
         name: id
         required: true
         type: integer
+      - description: Filter showtimes by Location ID
+        in: query
+        name: location_id
+        type: integer
+      - description: Filter showtimes by Date (YYYY-MM-DD)
+        in: query
+        name: date
+        type: string
+      - description: Filter showtimes by minimum Time (HH:MM:SS)
+        in: query
+        name: time
+        type: string
       produces:
       - application/json
       responses:
@@ -710,47 +744,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update movie
-      tags:
-      - movies
-  /movies/{id}/showtimes:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve showtimes for a specific movie, optionally filtered by
-        location
-      parameters:
-      - description: Movie ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Filter by Location ID
-        in: query
-        name: location_id
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/lib.Response'
-            - properties:
-                result:
-                  items:
-                    $ref: '#/definitions/lib.MovieShowtime'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/lib.Response'
-      summary: Get movie showtimes
       tags:
       - movies
   /orders:

@@ -160,10 +160,12 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, image, title, released_at, recommendation, duration, synopsis, director_name, genre_id, caster_id
-		FROM movie
+		SELECT m.id, m.image, m.title, m.released_at, m.recommendation, m.duration, m.synopsis, m.director_name, m.genre_id, g.name as genre_name, m.caster_id, c.name as caster_name
+		FROM movie m
+		LEFT JOIN genre g ON m.genre_id = g.id
+		LEFT JOIN caster c ON m.caster_id = c.id
 		%s
-		ORDER BY id %s
+		ORDER BY m.id %s
 		LIMIT $2 OFFSET $3
 	`, whereClause, sortDir)
 	rows, err := pgConn.Query(context.Background(), query, args...)
@@ -178,7 +180,7 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 		var movie lib.Movie
 		err := rows.Scan(
 			&movie.Id, &movie.Image, &movie.Title, &movie.ReleasedAt, &movie.Recommendation,
-			&movie.Duration, &movie.Synopsis, &movie.DirectorName, &movie.GenreId, &movie.CasterId,
+			&movie.Duration, &movie.Synopsis, &movie.DirectorName, &movie.GenreId, &movie.GenreName, &movie.CasterId, &movie.CasterName,
 		)
 		if err != nil {
 			return nil, pageInfo, fmt.Errorf("scanning movie: %w", err)
@@ -242,19 +244,21 @@ func GetMovieRelations(movieId int) ([]string, []string, error) {
 	return genres, casters, nil
 }
 
-// GetMovieById retrieves a specific movie by ID
-func GetMovieById(id int) (lib.Movie, error) {
+// GetMovieById retrieves a specific movie by ID with consolidated showtimes and filters
+func GetMovieById(id int, params lib.MovieDetailParams) (lib.Movie, error) {
 	pgConn := lib.InitDB()
 	defer pgConn.Close(context.Background())
 
 	var movie lib.Movie
 	err := pgConn.QueryRow(context.Background(), `
-		SELECT id, image, title, released_at, recommendation, duration, synopsis, director_name, genre_id, caster_id
-		FROM movie
-		WHERE id = $1
+		SELECT m.id, m.image, m.title, m.released_at, m.recommendation, m.duration, m.synopsis, m.director_name, m.genre_id, g.name as genre_name, m.caster_id, c.name as caster_name
+		FROM movie m
+		LEFT JOIN genre g ON m.genre_id = g.id
+		LEFT JOIN caster c ON m.caster_id = c.id
+		WHERE m.id = $1
 	`, id).Scan(
 		&movie.Id, &movie.Image, &movie.Title, &movie.ReleasedAt, &movie.Recommendation,
-		&movie.Duration, &movie.Synopsis, &movie.DirectorName, &movie.GenreId, &movie.CasterId,
+		&movie.Duration, &movie.Synopsis, &movie.DirectorName, &movie.GenreId, &movie.GenreName, &movie.CasterId, &movie.CasterName,
 	)
 
 	if err != nil {
@@ -265,6 +269,70 @@ func GetMovieById(id int) (lib.Movie, error) {
 	}
 
 	movie.Genres, movie.Casters, _ = GetMovieRelations(movie.Id)
+
+	// Fetch and group showtimes by cinema with filters
+	whereClause := "WHERE s.movie_id = $1"
+	args := []any{movie.Id}
+
+	if params.LocationId > 0 {
+		whereClause += fmt.Sprintf(" AND c.location_id = $%d", len(args)+1)
+		args = append(args, params.LocationId)
+	}
+	if params.Date != "" {
+		whereClause += fmt.Sprintf(" AND s.show_date = $%d", len(args)+1)
+		args = append(args, params.Date)
+	}
+	if params.Time != "" {
+		whereClause += fmt.Sprintf(" AND s.show_time >= $%d", len(args)+1)
+		args = append(args, params.Time)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT s.id, s.cinema_id, c.cinema_name, c.image as cinema_image, l.name as location_name, s.show_date, s.show_time::TEXT, s.price
+		FROM movie_showtimes s
+		JOIN cinema c ON s.cinema_id = c.id
+		JOIN location l ON c.location_id = l.id
+		%s
+		ORDER BY c.cinema_name, s.show_date, s.show_time
+	`, whereClause)
+	rows, err := pgConn.Query(context.Background(), query, args...)
+	if err == nil {
+		defer rows.Close()
+		cinemaMap := make(map[int]*lib.MovieCinemaDetail)
+		var cinemaIds []int // To keep order
+
+		for rows.Next() {
+			var st lib.CinemaShowtime
+			var cid int
+			var cname, lname string
+			var cimg *string
+			var sdate time.Time
+
+			err := rows.Scan(&st.ShowtimeId, &cid, &cname, &cimg, &lname, &sdate, &st.ShowTime, &st.Price)
+			if err != nil {
+				continue
+			}
+			st.ShowDate = sdate.Format("2006-01-02")
+
+			if detail, ok := cinemaMap[cid]; ok {
+				detail.Showtimes = append(detail.Showtimes, st)
+			} else {
+				newDetail := &lib.MovieCinemaDetail{
+					CinemaId:     cid,
+					CinemaName:   cname,
+					CinemaImage:  cimg,
+					LocationName: lname,
+					Showtimes:    []lib.CinemaShowtime{st},
+				}
+				cinemaMap[cid] = newDetail
+				cinemaIds = append(cinemaIds, cid)
+			}
+		}
+
+		for _, cid := range cinemaIds {
+			movie.Cinemas = append(movie.Cinemas, *cinemaMap[cid])
+		}
+	}
 
 	return movie, nil
 }

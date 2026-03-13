@@ -80,15 +80,16 @@ func GetOrderById(orderId int) (lib.Order, error) {
 	var order lib.Order
 	err := pgConn.QueryRow(context.Background(), `
 		SELECT o.id, o.order_number, o.profile_id, o.showtime_id, o.full_name, o.email, o.phone_number, o.total_price, o.status, o.created_at,
-		       m.title as movie_title, c.cinema_name, s.show_date, s.show_time::TEXT
+		       m.title as movie_title, c.cinema_name, l.name as location_name, s.show_date, s.show_time::TEXT
 		FROM orders o
 		JOIN movie_showtimes s ON o.showtime_id = s.id
 		JOIN movie m ON s.movie_id = m.id
 		JOIN cinema c ON s.cinema_id = c.id
+		JOIN location l ON c.location_id = l.id
 		WHERE o.id = $1
 	`, orderId).Scan(
 		&order.Id, &order.OrderNumber, &order.ProfileId, &order.ShowtimeId, &order.FullName, &order.Email, &order.PhoneNumber, &order.TotalPrice, &order.Status, &order.CreatedAt,
-		&order.MovieTitle, &order.CinemaName, &order.ShowDate, &order.ShowTime,
+		&order.MovieTitle, &order.CinemaName, &order.LocationName, &order.ShowDate, &order.ShowTime,
 	)
 
 	if err != nil {
@@ -175,11 +176,12 @@ func GetUserOrders(profileId int) ([]lib.Order, error) {
 
 	rows, err := pgConn.Query(context.Background(), `
 		SELECT o.id, o.order_number, o.showtime_id, o.total_price, o.status, o.created_at,
-		       m.title as movie_title, c.cinema_name, c.image as cinema_image
+		       m.title as movie_title, c.cinema_name, c.image as cinema_image, l.name as location_name
 		FROM orders o
 		JOIN movie_showtimes s ON o.showtime_id = s.id
 		JOIN movie m ON s.movie_id = m.id
 		JOIN cinema c ON s.cinema_id = c.id
+		JOIN location l ON c.location_id = l.id
 		WHERE o.profile_id = $1
 		ORDER BY o.created_at DESC
 	`, profileId)
@@ -194,7 +196,7 @@ func GetUserOrders(profileId int) ([]lib.Order, error) {
 		// Note: we use lib.Order struct but only some fields are populated for the list view
 		err := rows.Scan(
 			&o.Id, &o.OrderNumber, &o.ShowtimeId, &o.TotalPrice, &o.Status, &o.CreatedAt,
-			&o.MovieTitle, &o.CinemaName, &o.CinemaName, // Using CinemaName as a placeholder if image is needed but let's just stick to the design
+			&o.MovieTitle, &o.CinemaName, &o.CinemaImage, &o.LocationName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scanning user order: %w", err)
