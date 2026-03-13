@@ -10,7 +10,9 @@ import (
 
 
 func InitDB() *pgx.Conn {
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		godotenv.Load("../.env")
+	}
 
 
 	connStr := os.Getenv("DATABASE_URL")

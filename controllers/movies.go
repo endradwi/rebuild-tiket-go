@@ -205,3 +205,26 @@ func DeleteMovie(c *gin.Context) {
 
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Movie deleted successfully"})
 }
+// GetMovieShowtimes retrieves showtimes for a specific movie, optionally filtered by location
+func GetMovieShowtimes(c *gin.Context) {
+	idParam := c.Param("id")
+	movieId, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, lib.Response{Status: 400, Message: "Invalid movie ID"})
+		return
+	}
+
+	locationIdStr := c.Query("location_id")
+	locationId := 0
+	if locationIdStr != "" {
+		locationId, _ = strconv.Atoi(locationIdStr)
+	}
+
+	showtimes, err := models.GetShowtimesByMovie(movieId, locationId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: "Failed to fetch showtimes: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: showtimes})
+}

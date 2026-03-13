@@ -17,12 +17,12 @@ func CreateMovie(req lib.MovieCreateRequest) (lib.Movie, error) {
 
 	var movie lib.Movie
 	err := pgConn.QueryRow(context.Background(), `
-		INSERT INTO movie (image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id, cinema_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id, cinema_id
-	`, req.Image, req.Title, req.ReleasedAt, req.Recommendation, req.Duration, req.Synopsis, req.GenreId, req.CasterId, req.CinemaId).Scan(
+		INSERT INTO movie (image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id
+	`, req.Image, req.Title, req.ReleasedAt, req.Recommendation, req.Duration, req.Synopsis, req.GenreId, req.CasterId).Scan(
 		&movie.Id, &movie.Image, &movie.Title, &movie.ReleasedAt, &movie.Recommendation,
-		&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId, &movie.CinemaId,
+		&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId,
 	)
 
 	if err != nil {
@@ -105,7 +105,7 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 		sortDir = "DESC"
 	}
 	query := fmt.Sprintf(`
-		SELECT id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id, cinema_id
+		SELECT id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id
 		FROM movie
 		WHERE title ILIKE $1
 		ORDER BY id %s
@@ -123,7 +123,7 @@ func GetAllMovies(params lib.MovieQueryParams) ([]lib.Movie, lib.PageInfo, error
 		var movie lib.Movie
 		err := rows.Scan(
 			&movie.Id, &movie.Image, &movie.Title, &movie.ReleasedAt, &movie.Recommendation,
-			&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId, &movie.CinemaId,
+			&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId,
 		)
 		if err != nil {
 			return nil, pageInfo, fmt.Errorf("scanning movie: %w", err)
@@ -160,12 +160,12 @@ func GetMovieById(id int) (lib.Movie, error) {
 
 	var movie lib.Movie
 	err := pgConn.QueryRow(context.Background(), `
-		SELECT id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id, cinema_id
+		SELECT id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id
 		FROM movie
 		WHERE id = $1
 	`, id).Scan(
 		&movie.Id, &movie.Image, &movie.Title, &movie.ReleasedAt, &movie.Recommendation,
-		&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId, &movie.CinemaId,
+		&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId,
 	)
 
 	if err != nil {
@@ -194,13 +194,12 @@ func UpdateMovie(id int, req lib.MovieUpdateRequest) (lib.Movie, error) {
 			duration = COALESCE($5, duration),
 			synopsis = COALESCE($6, synopsis),
 			genre_id = COALESCE($7, genre_id),
-			caster_id = COALESCE($8, caster_id),
-			cinema_id = COALESCE($9, cinema_id)
-		WHERE id = $10
-		RETURNING id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id, cinema_id
-	`, req.Image, req.Title, req.ReleasedAt, req.Recommendation, req.Duration, req.Synopsis, req.GenreId, req.CasterId, req.CinemaId, id).Scan(
+			caster_id = COALESCE($8, caster_id)
+		WHERE id = $9
+		RETURNING id, image, title, released_at, recommendation, duration, synopsis, genre_id, caster_id
+	`, req.Image, req.Title, req.ReleasedAt, req.Recommendation, req.Duration, req.Synopsis, req.GenreId, req.CasterId, id).Scan(
 		&movie.Id, &movie.Image, &movie.Title, &movie.ReleasedAt, &movie.Recommendation,
-		&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId, &movie.CinemaId,
+		&movie.Duration, &movie.Synopsis, &movie.GenreId, &movie.CasterId,
 	)
 
 	if err != nil {

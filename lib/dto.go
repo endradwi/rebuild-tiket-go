@@ -70,7 +70,6 @@ type Movie struct {
 	Synopsis       *string    `json:"synopsis"`
 	GenreId        *int       `json:"genre_id"`
 	CasterId       *int       `json:"caster_id"`
-	CinemaId       *int       `json:"cinema_id"`
 }
 
 type MovieCreateRequest struct {
@@ -81,7 +80,6 @@ type MovieCreateRequest struct {
 	Synopsis       *string    `form:"synopsis"`
 	GenreId        *int       `form:"genre_id"`
 	CasterId       *int       `form:"caster_id"`
-	CinemaId       *int       `form:"cinema_id"`
 	Image          *string    `form:"-"`
 }
 
@@ -93,7 +91,6 @@ type MovieUpdateRequest struct {
 	Synopsis       *string    `form:"synopsis"`
 	GenreId        *int       `form:"genre_id"`
 	CasterId       *int       `form:"caster_id"`
-	CinemaId       *int       `form:"cinema_id"`
 	Image          *string    `form:"-"`
 }
 
@@ -102,6 +99,27 @@ type MovieQueryParams struct {
 	Page   int    `form:"page"`
 	Search string `form:"search"`
 	Sort   string `form:"sort"` // "asc" or "desc", default "asc"
+}
+
+type Location struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type Cinema struct {
+	Id           int        `json:"id"`
+	CinemaName   string     `json:"cinema_name"`
+	Image        *string    `json:"image"`
+	LocationId   *int       `json:"location_id"`
+}
+
+type MovieShowtime struct {
+	Id       int       `json:"id"`
+	MovieId  int       `json:"movie_id"`
+	CinemaId int       `json:"cinema_id"`
+	ShowDate time.Time `json:"show_date"`
+	ShowTime string    `json:"show_time"`
+	Price    int       `json:"price"`
 }
 
 
