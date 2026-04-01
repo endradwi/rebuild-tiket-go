@@ -1,6 +1,7 @@
 package main
 
 import (
+	"tiket/middleware"
 	"tiket/routers"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,9 @@ import (
 
 func main() {
 	router := gin.Default()
+
+	// Apply CORS middleware
+	router.Use(middleware.CorsMiddleware())
 
 	routers.InitRouter(router)
 
