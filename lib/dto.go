@@ -7,6 +7,7 @@ type User struct {
 	Id int 
 	Email string `json:"email" form:"email"`
 	Password string `json:"password" form:"password"`
+	RoleId int `json:"role_id"`
 	RoleName string `json:"role_name,omitempty"`
 }
 
@@ -240,6 +241,16 @@ type Payment struct {
 	PaymentStatus  string    `json:"payment_status"`
 	ExpiredAt      time.Time `json:"expired_at"`
 	QrCode         *string   `json:"qr_code"`
+}
+
+type Genre struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type Caster struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 

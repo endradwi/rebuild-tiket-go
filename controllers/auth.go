@@ -121,7 +121,8 @@ func Login(c *gin.Context) {
 		Status:  200,
 		Message: "success",
 		Result: gin.H{
-			"token": tokenJWT,
+			"token":   tokenJWT,
+			"role_id": dbUser.RoleId,
 		},
 	})
 

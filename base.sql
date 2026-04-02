@@ -2,6 +2,9 @@ DROP TABLE IF EXISTS payment CASCADE;
 DROP TABLE IF EXISTS order_seats CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS movie_showtimes CASCADE;
+DROP TABLE IF EXISTS movie_genres CASCADE;
+DROP TABLE IF EXISTS movie_casters CASCADE;
+DROP TABLE IF EXISTS movie_cinemas CASCADE;
 DROP TABLE IF EXISTS movie CASCADE;
 DROP TABLE IF EXISTS seat CASCADE;
 DROP TABLE IF EXISTS cinema CASCADE;
@@ -263,8 +266,8 @@ INSERT INTO role (name) VALUES ('USER'), ('ADMIN');
 -- default user (Seed)
 -- -------------------------
 INSERT INTO users (id, email, password) 
-VALUES (1, 'test@example.com', '$argon2id$v=19$m=65536,t=3,p=4$vP/WfW9lK9vY7K/k9I1fBw$Z7Q9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a'), -- password: password123 (hashed)
-       (2, 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$vP/WfW9lK9vY7K/k9I1fBw$Z7Q9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a9Z6a') -- password: password123 (hashed)
+VALUES (1, 'test@example.com', '$argon2id$v=19$m=65536,t=1,p=8$xTSrStyiu40O/X4UlQYw0w$P0h2bJmvLY1JL6qbOJk5e1iaAh+m3oUoquXQnfqxtWQ'), -- password: password123 (hashed)
+       (2, 'admin@example.com', '$argon2id$v=19$m=65536,t=1,p=8$xTSrStyiu40O/X4UlQYw0w$P0h2bJmvLY1JL6qbOJk5e1iaAh+m3oUoquXQnfqxtWQ') -- password: password123 (hashed)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO profile (id, user_id, role_id, first_name, last_name)

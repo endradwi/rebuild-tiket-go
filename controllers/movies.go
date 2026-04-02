@@ -292,3 +292,51 @@ func DeleteMovie(c *gin.Context) {
 	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "Movie deleted successfully"})
 }
 
+// GetGenres godoc
+// @Summary      Get all genres
+// @Description  Retrieve a list of all movie genres
+// @Tags         movies
+// @Produce      json
+// @Success      200   {object}  lib.Response{result=[]lib.Genre}
+// @Router       /movies/genres [get]
+func GetGenres(c *gin.Context) {
+	genres, err := models.GetAllGenres()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: genres})
+}
+
+// GetCasters godoc
+// @Summary      Get all casters
+// @Description  Retrieve a list of all movie casters
+// @Tags         movies
+// @Produce      json
+// @Success      200   {object}  lib.Response{result=[]lib.Caster}
+// @Router       /movies/casters [get]
+func GetCasters(c *gin.Context) {
+	casters, err := models.GetAllCasters()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: casters})
+}
+
+// GetCinemas godoc
+// @Summary      Get all cinemas
+// @Description  Retrieve a list of all cinemas
+// @Tags         movies
+// @Produce      json
+// @Success      200   {object}  lib.Response{result=[]lib.Cinema}
+// @Router       /movies/cinemas [get]
+func GetCinemas(c *gin.Context) {
+	cinemas, err := models.GetAllCinemas()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, lib.Response{Status: 500, Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, lib.Response{Status: 200, Message: "success", Result: cinemas})
+}
+

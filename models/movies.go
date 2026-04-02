@@ -429,3 +429,77 @@ func DeleteMovie(id int) error {
 
 	return nil
 }
+
+// GetAllGenres retrieves all movie genres
+func GetAllGenres() ([]lib.Genre, error) {
+	pgConn := lib.InitDB()
+	defer pgConn.Close(context.Background())
+
+	rows, err := pgConn.Query(context.Background(), `SELECT id, name FROM genre ORDER BY name ASC`)
+	if err != nil {
+		return nil, fmt.Errorf("querying genres: %w", err)
+	}
+	defer rows.Close()
+
+	var genres []lib.Genre
+	for rows.Next() {
+		var g lib.Genre
+		if err := rows.Scan(&g.Id, &g.Name); err != nil {
+			return nil, err
+		}
+		genres = append(genres, g)
+	}
+	if genres == nil { genres = []lib.Genre{} }
+	return genres, nil
+}
+
+// GetAllCasters retrieves all movie casters
+func GetAllCasters() ([]lib.Caster, error) {
+	pgConn := lib.InitDB()
+	defer pgConn.Close(context.Background())
+
+	rows, err := pgConn.Query(context.Background(), `SELECT id, name FROM caster ORDER BY name ASC`)
+	if err != nil {
+		return nil, fmt.Errorf("querying casters: %w", err)
+	}
+	defer rows.Close()
+
+	var casters []lib.Caster
+	for rows.Next() {
+		var c lib.Caster
+		if err := rows.Scan(&c.Id, &c.Name); err != nil {
+			return nil, err
+		}
+		casters = append(casters, c)
+	}
+	if casters == nil { casters = []lib.Caster{} }
+	return casters, nil
+}
+
+// GetAllCinemas retrieves all cinemas
+func GetAllCinemas() ([]lib.Cinema, error) {
+	pgConn := lib.InitDB()
+	defer pgConn.Close(context.Background())
+
+	rows, err := pgConn.Query(context.Background(), `
+		SELECT c.id, c.cinema_name, c.image, c.location_id, l.name as location_name 
+		FROM cinema c
+		JOIN location l ON c.location_id = l.id
+		ORDER BY c.cinema_name ASC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("querying cinemas: %w", err)
+	}
+	defer rows.Close()
+
+	var cinemas []lib.Cinema
+	for rows.Next() {
+		var c lib.Cinema
+		if err := rows.Scan(&c.Id, &c.CinemaName, &c.Image, &c.LocationId, &c.LocationName); err != nil {
+			return nil, err
+		}
+		cinemas = append(cinemas, c)
+	}
+	if cinemas == nil { cinemas = []lib.Cinema{} }
+	return cinemas, nil
+}
