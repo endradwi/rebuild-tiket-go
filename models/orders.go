@@ -29,7 +29,29 @@ func CreateOrder(userId int, req lib.OrderCreateRequest) (lib.Order, error) {
 	}
 	defer tx.Rollback(context.Background())
 
-	// 1. Get total price from seats
+	// 1. Lock the showtime row to serialize bookings for this showtime
+	var dummy int
+	err = tx.QueryRow(context.Background(), "SELECT id FROM movie_showtimes WHERE id = $1 FOR UPDATE", req.ShowtimeId).Scan(&dummy)
+	if err != nil {
+		return lib.Order{}, fmt.Errorf("locking showtime: %w", err)
+	}
+
+	// 2. Check seat availability
+	var occupiedCount int
+	err = tx.QueryRow(context.Background(), `
+		SELECT COUNT(*) 
+		FROM order_seats os
+		JOIN orders o ON os.order_id = o.id
+		WHERE o.showtime_id = $1 AND os.seat_id = ANY($2) AND o.status != 'cancelled'
+	`, req.ShowtimeId, req.SeatIds).Scan(&occupiedCount)
+	if err != nil {
+		return lib.Order{}, fmt.Errorf("checking seat availability: %w", err)
+	}
+	if occupiedCount > 0 {
+		return lib.Order{}, fmt.Errorf("one or more seats are already booked")
+	}
+
+	// 3. Get total price from seats
 	var totalPrice int
 	err = tx.QueryRow(context.Background(), `
 		SELECT SUM(price) FROM seat WHERE id = ANY($1)
@@ -40,7 +62,7 @@ func CreateOrder(userId int, req lib.OrderCreateRequest) (lib.Order, error) {
 
 	orderNumber := GenerateOrderNumber()
 
-	// 2. Insert into orders table
+	// 4. Insert into orders table
 	var order lib.Order
 	err = tx.QueryRow(context.Background(), `
 		INSERT INTO orders (order_number, profile_id, showtime_id, total_price, status)
@@ -53,7 +75,7 @@ func CreateOrder(userId int, req lib.OrderCreateRequest) (lib.Order, error) {
 		return lib.Order{}, fmt.Errorf("inserting order: %w", err)
 	}
 
-	// 3. Insert into order_seats table
+	// 5. Insert into order_seats table
 	for _, seatId := range req.SeatIds {
 		_, err = tx.Exec(context.Background(), `
 			INSERT INTO order_seats (order_id, seat_id)
@@ -64,7 +86,7 @@ func CreateOrder(userId int, req lib.OrderCreateRequest) (lib.Order, error) {
 		}
 	}
 
-	// 4. Commit transaction
+	// 6. Commit transaction
 	if err := tx.Commit(context.Background()); err != nil {
 		return lib.Order{}, fmt.Errorf("committing transaction: %w", err)
 	}
