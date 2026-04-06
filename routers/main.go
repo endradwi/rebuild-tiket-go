@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"tiket/controllers"
 	_ "tiket/docs"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -15,6 +16,9 @@ func InitRouter(router *gin.Engine)  {
 
 	// Serve the uploads directory statically
 	router.Static("/uploads", "./uploads")
+
+	// Public Webhooks
+	router.POST("/webhooks/xendit", controllers.XenditWebhook)
 
 	AuthRouter(router.Group("/auth"))
 	UserRouter(router.Group(""))

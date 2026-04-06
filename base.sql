@@ -250,6 +250,8 @@ CREATE TABLE payment (
   payment_status VARCHAR DEFAULT 'pending', -- pending, success, failed
   expired_at TIMESTAMP,
   qr_code VARCHAR,
+  invoice_url VARCHAR,
+  external_id VARCHAR,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
 

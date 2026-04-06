@@ -5,10 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"tiket/lib"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	xendit "github.com/xendit/xendit-go/v6"
+	"github.com/xendit/xendit-go/v6/invoice"
 )
 
 // GenerateRandomString generates a random hex string of given length
@@ -157,33 +160,59 @@ func CreatePayment(orderId int, req lib.PaymentRequest) (lib.Payment, error) {
 	}
 	defer tx.Rollback(context.Background())
 
-	// 1. Update order info and status
+	// 1. Update order info and status (Change status to 'pending' waiting for payment)
 	var totalPrice int
+	var orderNumber string
 	err = tx.QueryRow(context.Background(), `
 		UPDATE orders 
-		SET full_name = $1, email = $2, phone_number = $3, status = 'paid'
+		SET full_name = $1, email = $2, phone_number = $3, status = 'pending'
 		WHERE id = $4
-		RETURNING total_price
-	`, req.FullName, req.Email, req.PhoneNumber, orderId).Scan(&totalPrice)
+		RETURNING total_price, order_number
+	`, req.FullName, req.Email, req.PhoneNumber, orderId).Scan(&totalPrice, &orderNumber)
 	if err != nil {
 		return lib.Payment{}, fmt.Errorf("updating order: %w", err)
 	}
 
-	// 2. Insert into payment table
+	// 2. Xendit Invoice Creation
+	xenditKey := os.Getenv("XENDIT_SECRET_KEY")
+	if xenditKey == "" {
+		return lib.Payment{}, fmt.Errorf("XENDIT_SECRET_KEY is not set")
+	}
+
+	client := xendit.NewClient(xenditKey)
+	
+	description := "Payment for Ticket " + orderNumber
+	// Create Invoice Request
+	invoiceData := invoice.CreateInvoiceRequest{
+		ExternalId: orderNumber,
+		Amount:     float64(totalPrice),
+		PayerEmail: &req.Email,
+		Description: &description,
+	}
+
+	resp, _, xenditErr := client.InvoiceApi.CreateInvoice(context.Background()).
+		CreateInvoiceRequest(invoiceData).
+		Execute()
+
+	if xenditErr != nil {
+		return lib.Payment{}, fmt.Errorf("creating xendit invoice: %v", xenditErr.Error())
+	}
+
+	// 3. Insert into payment table
 	var payment lib.Payment
 	expiredAt := time.Now().Add(24 * time.Hour) // Payment expires in 24h
 	err = tx.QueryRow(context.Background(), `
-		INSERT INTO payment (order_id, total_payment, payment_method, payment_status, expired_at)
-		VALUES ($1, $2, $3, 'success', $4)
-		RETURNING id, order_id, total_payment, payment_method, payment_status, expired_at
-	`, orderId, totalPrice, req.PaymentMethod, expiredAt).Scan(
-		&payment.Id, &payment.OrderId, &payment.TotalPayment, &payment.PaymentMethod, &payment.PaymentStatus, &payment.ExpiredAt,
+		INSERT INTO payment (order_id, total_payment, payment_method, payment_status, expired_at, invoice_url, external_id)
+		VALUES ($1, $2, $3, 'pending', $4, $5, $6)
+		RETURNING id, order_id, total_payment, payment_method, payment_status, expired_at, invoice_url, external_id
+	`, orderId, totalPrice, req.PaymentMethod, expiredAt, resp.InvoiceUrl, resp.ExternalId).Scan(
+		&payment.Id, &payment.OrderId, &payment.TotalPayment, &payment.PaymentMethod, &payment.PaymentStatus, &payment.ExpiredAt, &payment.InvoiceUrl, &payment.ExternalId,
 	)
 	if err != nil {
 		return lib.Payment{}, fmt.Errorf("inserting payment: %w", err)
 	}
 
-	// 3. Commit
+	// 4. Commit
 	if err := tx.Commit(context.Background()); err != nil {
 		return lib.Payment{}, fmt.Errorf("committing transaction: %w", err)
 	}
@@ -231,4 +260,52 @@ func GetUserOrders(profileId int) ([]lib.Order, error) {
 	}
 
 	return orders, nil
+}
+
+// UpdatePaymentStatusByExternalId updates order and payment status based on Xendit callback
+func UpdatePaymentStatusByExternalId(externalId string, status string) error {
+	pgConn := lib.InitDB()
+	defer pgConn.Close(context.Background())
+
+	tx, err := pgConn.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	// Mapping Xendit status to our local status
+	// Xendit statuses: PAID, EXPIRED, SETTLED
+	var orderStatus string
+	var paymentStatus string
+
+	switch status {
+	case "PAID", "SETTLED":
+		orderStatus = "paid"
+		paymentStatus = "success"
+	case "EXPIRED":
+		orderStatus = "cancelled"
+		paymentStatus = "failed"
+	default:
+		return nil // Ignore unknown statuses
+	}
+
+	// 1. Update Payment Status
+	_, err = tx.Exec(context.Background(), `
+		UPDATE payment SET payment_status = $1, updated_at = NOW()
+		WHERE external_id = $2
+	`, paymentStatus, externalId)
+	if err != nil {
+		return fmt.Errorf("updating payment status: %w", err)
+	}
+
+	// 2. Update Order Status
+	_, err = tx.Exec(context.Background(), `
+		UPDATE orders SET status = $1, updated_at = NOW()
+		WHERE order_number = $2
+	`, orderStatus, externalId)
+	if err != nil {
+		return fmt.Errorf("updating order status: %w", err)
+	}
+
+	return tx.Commit(context.Background())
 }

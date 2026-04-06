@@ -219,6 +219,8 @@ type Order struct {
 	LocationName string        `json:"location_name,omitempty"`
 	ShowDate    *time.Time    `json:"show_date,omitempty"`
 	ShowTime    *string       `json:"show_time,omitempty"`
+	InvoiceUrl  *string       `json:"invoice_url,omitempty"`
+	ExternalId  *string       `json:"external_id,omitempty"`
 }
 
 type OrderCreateRequest struct {
@@ -241,6 +243,22 @@ type Payment struct {
 	PaymentStatus  string    `json:"payment_status"`
 	ExpiredAt      time.Time `json:"expired_at"`
 	QrCode         *string   `json:"qr_code"`
+	InvoiceUrl     *string   `json:"invoice_url"`
+	ExternalId     *string   `json:"external_id"`
+}
+
+type XenditWebhookRequest struct {
+	Id                 string    `json:"id"`
+	ExternalId         string    `json:"external_id"`
+	Status             string    `json:"status"`
+	Amount             float64   `json:"amount"`
+	PayerEmail         string    `json:"payer_email"`
+	Description        string    `json:"description"`
+	PaymentMethod      string    `json:"payment_method"`
+	PaymentChannel     string    `json:"payment_channel"`
+	PaidAt            *time.Time `json:"paid_at"`
+	Created           *time.Time `json:"created"`
+	Updated           *time.Time `json:"updated"`
 }
 
 type Genre struct {
